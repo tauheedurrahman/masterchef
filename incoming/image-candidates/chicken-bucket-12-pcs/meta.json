@@ -1,0 +1,20 @@
+{
+  "query": "fried chicken bucket",
+  "files": [
+    {
+      "file": "01.jpg",
+      "credit": "chicken mackay / Pexels",
+      "link": "https://www.pexels.com/photo/shallow-focus-photo-of-delicious-fried-chickens-in-a-bucket-5474676/"
+    },
+    {
+      "file": "02.jpg",
+      "credit": "Denys Gromov / Pexels",
+      "link": "https://www.pexels.com/photo/humorous-scene-with-fire-extinguisher-and-food-38177739/"
+    },
+    {
+      "file": "03.jpg",
+      "credit": "Denys Gromov / Pexels",
+      "link": "https://www.pexels.com/photo/friends-enjoying-fried-food-with-laughter-38177736/"
+    }
+  ]
+}

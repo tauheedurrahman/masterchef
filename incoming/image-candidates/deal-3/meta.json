@@ -1,0 +1,20 @@
+{
+  "query": "five burgers sharing platter",
+  "files": [
+    {
+      "file": "01.jpg",
+      "credit": "Juan Santos / Pexels",
+      "link": "https://www.pexels.com/photo/people-hands-around-burgers-on-tray-25684786/"
+    },
+    {
+      "file": "02.jpg",
+      "credit": "Polina Tankilevitch / Pexels",
+      "link": "https://www.pexels.com/photo/burgers-on-a-plate-8202825/"
+    },
+    {
+      "file": "03.jpg",
+      "credit": "Bonus Studio / Pexels",
+      "link": "https://www.pexels.com/photo/burgers-on-plates-ready-for-serving-in-restaurant-5488051/"
+    }
+  ]
+}

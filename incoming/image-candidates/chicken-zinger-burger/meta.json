@@ -1,0 +1,20 @@
+{
+  "query": "spicy crispy chicken sandwich",
+  "files": [
+    {
+      "file": "01.jpg",
+      "credit": "chicken mackay / Pexels",
+      "link": "https://www.pexels.com/photo/close-up-shot-of-a-mouth-watering-chicken-burger-5474836/"
+    },
+    {
+      "file": "02.jpg",
+      "credit": "Youssef Samuil / Pexels",
+      "link": "https://www.pexels.com/photo/pouring-sauce-on-burger-meat-27049618/"
+    },
+    {
+      "file": "03.jpg",
+      "credit": "Anthony Rahayel / Pexels",
+      "link": "https://www.pexels.com/photo/close-up-of-fast-food-19585042/"
+    }
+  ]
+}

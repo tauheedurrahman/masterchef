@@ -1,0 +1,20 @@
+{
+  "query": "baked lasagna slice",
+  "files": [
+    {
+      "file": "01.jpg",
+      "credit": "Alberta Studios / Pexels",
+      "link": "https://www.pexels.com/photo/a-lasagna-on-a-plate-9650082/"
+    },
+    {
+      "file": "02.jpg",
+      "credit": "alleksana / Pexels",
+      "link": "https://www.pexels.com/photo/two-servings-of-lasagna-on-black-plates-5949889/"
+    },
+    {
+      "file": "03.jpg",
+      "credit": "alleksana / Pexels",
+      "link": "https://www.pexels.com/photo/sliced-lasagna-on-ceramic-plate-5949923/"
+    }
+  ]
+}

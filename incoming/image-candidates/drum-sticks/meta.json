@@ -1,0 +1,20 @@
+{
+  "query": "fried chicken drumsticks",
+  "files": [
+    {
+      "file": "01.jpg",
+      "credit": "素材王国 Footage Kingdom / Pexels",
+      "link": "https://www.pexels.com/photo/close-up-photo-of-fried-chicken-13823475/"
+    },
+    {
+      "file": "02.jpg",
+      "credit": "Mahmut Zeytin / Pexels",
+      "link": "https://www.pexels.com/photo/fast-food-meal-with-fried-chicken-and-fries-36879224/"
+    },
+    {
+      "file": "03.jpg",
+      "credit": "Kai-Chieh Chan / Pexels",
+      "link": "https://www.pexels.com/photo/cutting-board-with-friend-chicken-5652264/"
+    }
+  ]
+}

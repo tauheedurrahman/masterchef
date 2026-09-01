@@ -1,0 +1,20 @@
+{
+  "query": "gourmet chicken burger closeup",
+  "files": [
+    {
+      "file": "01.jpg",
+      "credit": "Tık Tok TV / Pexels",
+      "link": "https://www.pexels.com/photo/burger-with-red-cabbage-20257167/"
+    },
+    {
+      "file": "02.jpg",
+      "credit": "Tahir Xəlfəquliyev / Pexels",
+      "link": "https://www.pexels.com/photo/platter-of-mini-chicken-burgers-with-sesame-buns-38036571/"
+    },
+    {
+      "file": "03.jpg",
+      "credit": "Syed Saud Ahmed / Pexels",
+      "link": "https://www.pexels.com/photo/close-up-of-mouthwatering-hamburger-on-black-background-6850423/"
+    }
+  ]
+}

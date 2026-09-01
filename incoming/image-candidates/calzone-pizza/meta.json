@@ -1,0 +1,20 @@
+{
+  "query": "baked calzone folded pizza",
+  "files": [
+    {
+      "file": "01.jpg",
+      "credit": "Vilnis Husko / Pexels",
+      "link": "https://www.pexels.com/photo/a-delicious-folded-pizza-on-gray-surface-13457628/"
+    },
+    {
+      "file": "02.jpg",
+      "credit": "Max Griss / Pexels",
+      "link": "https://www.pexels.com/photo/delicious-neapolitan-calzone-on-white-plate-36642833/"
+    },
+    {
+      "file": "03.jpg",
+      "credit": "Antonio Di Giacomo / Pexels",
+      "link": "https://www.pexels.com/photo/delicious-calzone-with-fresh-ingredients-and-sauce-31300977/"
+    }
+  ]
+}

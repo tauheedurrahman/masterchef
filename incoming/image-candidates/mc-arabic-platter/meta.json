@@ -1,0 +1,20 @@
+{
+  "query": "shawarma platter rice salad",
+  "files": [
+    {
+      "file": "01.jpg",
+      "credit": "Omar B Shokerat / Pexels",
+      "link": "https://www.pexels.com/photo/rolls-and-potatoes-served-in-a-restaurant-18177341/"
+    },
+    {
+      "file": "02.jpg",
+      "credit": "Dee Dave / Pexels",
+      "link": "https://www.pexels.com/photo/indian-meal-with-rice-and-curry-8018000/"
+    },
+    {
+      "file": "03.jpg",
+      "credit": "Sohel Rana Ripon / Pexels",
+      "link": "https://www.pexels.com/photo/two-breakfast-plates-25440703/"
+    }
+  ]
+}

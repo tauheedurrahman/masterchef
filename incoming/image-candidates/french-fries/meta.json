@@ -1,0 +1,20 @@
+{
+  "query": "french fries basket",
+  "files": [
+    {
+      "file": "01.jpg",
+      "credit": "pedro furtado / Pexels",
+      "link": "https://www.pexels.com/photo/crispy-french-fries-in-basket-with-ketchup-28992238/"
+    },
+    {
+      "file": "02.jpg",
+      "credit": "Luis Felipe Pérez / Pexels",
+      "link": "https://www.pexels.com/photo/yellow-fries-on-plate-19297802/"
+    },
+    {
+      "file": "03.jpg",
+      "credit": "Nikita Krasnov / Pexels",
+      "link": "https://www.pexels.com/photo/yummy-french-fries-in-basket-surrounded-by-garlic-and-mushrooms-6006652/"
+    }
+  ]
+}

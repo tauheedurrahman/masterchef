@@ -1,0 +1,20 @@
+{
+  "query": "grilled chicken tortilla wrap",
+  "files": [
+    {
+      "file": "01.jpg",
+      "credit": "Valeria Boltneva / Pexels",
+      "link": "https://www.pexels.com/photo/wrap-with-meat-and-sauce-15913640/"
+    },
+    {
+      "file": "02.jpg",
+      "credit": "Tochukwu  Ekeh / Pexels",
+      "link": "https://www.pexels.com/photo/delicious-grilled-chicken-burrito-on-paper-wrap-37324429/"
+    },
+    {
+      "file": "03.jpg",
+      "credit": "RDNE Stock project / Pexels",
+      "link": "https://www.pexels.com/photo/close-up-shot-of-a-person-slicing-a-shawarma-5779372/"
+    }
+  ]
+}

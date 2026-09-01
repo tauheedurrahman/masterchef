@@ -1,0 +1,20 @@
+{
+  "query": "three chicken wraps tray",
+  "files": [
+    {
+      "file": "01.jpg",
+      "credit": "Mahmut Zeytin / Pexels",
+      "link": "https://www.pexels.com/photo/delicious-fast-food-platter-with-fries-36879216/"
+    },
+    {
+      "file": "02.jpg",
+      "credit": "Sascha Weber / Pexels",
+      "link": "https://www.pexels.com/photo/gourmet-appetizer-platter-with-fresh-wraps-28548860/"
+    },
+    {
+      "file": "03.jpg",
+      "credit": "Anil  Sharma / Pexels",
+      "link": "https://www.pexels.com/photo/gourmet-bao-buns-with-assorted-sauces-33428721/"
+    }
+  ]
+}

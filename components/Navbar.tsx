@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import SafeImage from "./SafeImage";
+import Logo from "./Logo";
 import {
   ArrowRightIcon,
   CartIcon,
@@ -131,10 +132,13 @@ export default function Navbar({ index }: { index: SearchIndexItem[] }) {
 
       <header className="nav" data-scrolled={scrolled ? "true" : "false"}>
         <div className="container nav__inner">
-          <Link href="/" className="logo" aria-label={`${SITE.name} home`}>
-            <span className="logo__mark" aria-hidden="true">
-              MC
-            </span>
+          <Link
+            href="/"
+            className="logo"
+            style={{ gap: 8 }}
+            aria-label={`${SITE.name} home`}
+          >
+            <Logo width={36} height={36} />
             <span className="logo__text">
               <span className="logo__name">Master Chef</span>
               <span className="logo__sub">Hot &amp; Delicious</span>
@@ -270,7 +274,10 @@ export default function Navbar({ index }: { index: SearchIndexItem[] }) {
           />
           <aside className="drawer" role="dialog" aria-modal="true" aria-label="Menu">
             <div className="drawer__head">
-              <span className="logo__name">Menu</span>
+              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <Logo width={28} height={28} />
+                <span className="logo__name">Menu</span>
+              </span>
               <button
                 type="button"
                 className="icon-btn"

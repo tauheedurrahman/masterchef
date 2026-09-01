@@ -1,0 +1,20 @@
+{
+  "query": "spicy seasoned chilli fries",
+  "files": [
+    {
+      "file": "01.jpg",
+      "credit": "Rahul Sapra / Pexels",
+      "link": "https://www.pexels.com/photo/close-up-shot-of-french-fries-11485199/"
+    },
+    {
+      "file": "02.jpg",
+      "credit": "Milton Das / Pexels",
+      "link": "https://www.pexels.com/photo/spicy-french-fries-with-ketchup-in-black-skillet-35123981/"
+    },
+    {
+      "file": "03.jpg",
+      "credit": "Matheus Alves / Pexels",
+      "link": "https://www.pexels.com/photo/close-up-of-french-fries-18339330/"
+    }
+  ]
+}

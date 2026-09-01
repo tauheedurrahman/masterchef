@@ -1,0 +1,20 @@
+{
+  "query": "crispy chicken burger melted cheddar",
+  "files": [
+    {
+      "file": "01.jpg",
+      "credit": "Meraj Kazi / Pexels",
+      "link": "https://www.pexels.com/photo/burger-and-french-fries-on-a-wood-slice-tray-11299742/"
+    },
+    {
+      "file": "02.jpg",
+      "credit": "Moisés Delgado / Pexels",
+      "link": "https://www.pexels.com/photo/close-up-shot-of-a-cheeseburger-10861569/"
+    },
+    {
+      "file": "03.jpg",
+      "credit": "Mohamed  Olwy / Pexels",
+      "link": "https://www.pexels.com/photo/delicious-cheeseburgers-with-fresh-vegetables-36691286/"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "query": "tall tower burger fries",
+  "files": [
+    {
+      "file": "01.jpg",
+      "credit": "Josh Eleazar / Pexels",
+      "link": "https://www.pexels.com/photo/juicy-cheeseburger-with-crispy-french-fries-35991523/"
+    },
+    {
+      "file": "02.jpg",
+      "credit": "Smit Karkar / Pexels",
+      "link": "https://www.pexels.com/photo/burger-chips-drink-and-brownie-on-a-cutting-board-14773005/"
+    },
+    {
+      "file": "03.jpg",
+      "credit": "Mounir Salah / Pexels",
+      "link": "https://www.pexels.com/photo/a-yummy-fast-food-meal-14710214/"
+    }
+  ]
+}

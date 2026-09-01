@@ -1,0 +1,20 @@
+{
+  "query": "double decker burger fries",
+  "files": [
+    {
+      "file": "01.jpg",
+      "credit": "Mounir Salah / Pexels",
+      "link": "https://www.pexels.com/photo/a-yummy-fast-food-meal-14710214/"
+    },
+    {
+      "file": "02.jpg",
+      "credit": "Mounir Salah / Pexels",
+      "link": "https://www.pexels.com/photo/close-up-shot-of-delicious-cheeseburger-and-french-fries-on-wooden-surface-14710217/"
+    },
+    {
+      "file": "03.jpg",
+      "credit": "Nano Erdozain / Pexels",
+      "link": "https://www.pexels.com/photo/a-sandwich-with-cheese-lettuce-tomato-and-fries-27905900/"
+    }
+  ]
+}

@@ -21,11 +21,12 @@ interface Placed {
 const PHONE_RE = /^03\d{2}-?\d{7}$/;
 
 export default function CheckoutView() {
-  const { lines, hydrated, subtotal, clear } = useCart();
+  const { lines, hydrated, subtotal, clear, notify } = useCart();
 
   const [orderType, setOrderType] = useState<OrderType>("delivery");
   const [payment, setPayment] = useState<Payment>("cod");
   const [placed, setPlaced] = useState<Placed | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -74,7 +75,7 @@ export default function CheckoutView() {
     return Object.keys(next).length === 0;
   }
 
-  function placeOrder(e: React.FormEvent) {
+  async function placeOrder(e: React.FormEvent) {
     e.preventDefault();
     if (!validate()) {
       // Take the customer to the first thing that needs fixing.
@@ -83,11 +84,52 @@ export default function CheckoutView() {
         ?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
+    if (submitting) return;
 
-    const number = `MC-${Math.floor(100000 + Math.random() * 900000)}`;
-    setPlaced({ number, type: orderType, total, payment });
-    clear();
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderType,
+          customer: {
+            name: form.name.trim(),
+            phone: form.phone.trim(),
+            email: form.email.trim(),
+          },
+          deliveryAddress:
+            orderType === "delivery"
+              ? {
+                  street: form.address.trim(),
+                  area: form.area.trim(),
+                  city: form.city.trim(),
+                  landmark: form.landmark.trim(),
+                }
+              : null,
+          items: lines.map((l) => ({
+            name: l.name,
+            variant: l.kind === "deal" ? "Deal" : l.variantLabel,
+            price: l.unitPrice,
+            quantity: l.qty,
+          })),
+          paymentMethod: payment,
+          specialInstructions: form.timeNote.trim(),
+        }),
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const { orderNumber } = (await res.json()) as { orderNumber: string };
+
+      setPlaced({ number: orderNumber, type: orderType, total, payment });
+      clear();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch {
+      // Cart is deliberately left intact so the customer can retry.
+      notify("Something went wrong, please try again");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   /* --------------------------- Confirmation --------------------------- */

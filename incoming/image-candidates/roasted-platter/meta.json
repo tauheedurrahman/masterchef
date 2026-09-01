@@ -1,0 +1,20 @@
+{
+  "query": "chicken wings fries platter",
+  "files": [
+    {
+      "file": "01.jpg",
+      "credit": "Lenon Mwamtobe / Pexels",
+      "link": "https://www.pexels.com/photo/chicken-wings-and-fries-14661492/"
+    },
+    {
+      "file": "02.jpg",
+      "credit": "Kemal Can / Pexels",
+      "link": "https://www.pexels.com/photo/delicious-grilled-chicken-meal-with-sides-37322776/"
+    },
+    {
+      "file": "03.jpg",
+      "credit": "Kai-Chieh Chan / Pexels",
+      "link": "https://www.pexels.com/photo/fried-chicken-and-french-fries-5652256/"
+    }
+  ]
+}

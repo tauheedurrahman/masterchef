@@ -1,0 +1,20 @@
+{
+  "query": "crispy chicken burger sesame bun",
+  "files": [
+    {
+      "file": "01.jpg",
+      "credit": "Mariam x / Pexels",
+      "link": "https://www.pexels.com/photo/crispy-chicken-burger-and-fries-on-wooden-board-34407059/"
+    },
+    {
+      "file": "02.jpg",
+      "credit": "Qamar Rehman / Pexels",
+      "link": "https://www.pexels.com/photo/close-up-photo-of-delicious-chicken-burger-11354487/"
+    },
+    {
+      "file": "03.jpg",
+      "credit": "chicken mackay / Pexels",
+      "link": "https://www.pexels.com/photo/close-up-shot-of-a-mouth-watering-chicken-burger-5474836/"
+    }
+  ]
+}

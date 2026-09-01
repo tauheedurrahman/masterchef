@@ -1,0 +1,20 @@
+{
+  "query": "crispy chicken burger grilled patty",
+  "files": [
+    {
+      "file": "01.jpg",
+      "credit": "Ron Lach / Pexels",
+      "link": "https://www.pexels.com/photo/photo-of-beef-patties-being-grilled-8880744/"
+    },
+    {
+      "file": "02.jpg",
+      "credit": "Meraj Kazi / Pexels",
+      "link": "https://www.pexels.com/photo/a-delicious-cheese-burger-with-lettuce-on-a-wooden-chopping-board-11299737/"
+    },
+    {
+      "file": "03.jpg",
+      "credit": "Tık Tok TV / Pexels",
+      "link": "https://www.pexels.com/photo/burger-with-red-cabbage-20257167/"
+    }
+  ]
+}

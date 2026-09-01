@@ -1,0 +1,20 @@
+{
+  "query": "crispy popcorn chicken bites",
+  "files": [
+    {
+      "file": "01.jpg",
+      "credit": "Josh Eleazar / Pexels",
+      "link": "https://www.pexels.com/photo/crispy-taiwanese-popcorn-chicken-in-basket-28573376/"
+    },
+    {
+      "file": "02.jpg",
+      "credit": "Roger Cziwerny / Pexels",
+      "link": "https://www.pexels.com/photo/brown-fried-dish-on-white-bowl-792024/"
+    },
+    {
+      "file": "03.jpg",
+      "credit": "Marvin  Sacdalan / Pexels",
+      "link": "https://www.pexels.com/photo/crispy-fried-chicken-in-white-ceramic-food-tray-13065202/"
+    }
+  ]
+}

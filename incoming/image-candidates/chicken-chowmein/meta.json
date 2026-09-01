@@ -1,0 +1,20 @@
+{
+  "query": "chicken chow mein noodles",
+  "files": [
+    {
+      "file": "01.jpg",
+      "credit": "Nadin Sh / Pexels",
+      "link": "https://www.pexels.com/photo/close-up-of-chicken-noodles-dish-24738507/"
+    },
+    {
+      "file": "02.jpg",
+      "credit": "Clem Onojeghuo / Pexels",
+      "link": "https://www.pexels.com/photo/person-in-orange-shirt-holding-aluminum-rectangular-container-104884/"
+    },
+    {
+      "file": "03.jpg",
+      "credit": "ds rexy / Pexels",
+      "link": "https://www.pexels.com/photo/delicious-indonesian-chicken-noodle-bowl-36997934/"
+    }
+  ]
+}

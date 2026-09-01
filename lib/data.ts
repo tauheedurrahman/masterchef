@@ -205,7 +205,7 @@ export const BASE_ITEMS: MenuItem[] = [
     variants: [{ label: "Regular", price: 350 }],
     description:
       "Our house zinger fillet, marinated overnight and fried to a shatter, tucked into an oversized toasted bun.",
-    images: [P.burger1, P.burger3],
+    images: ['/images/menu/big-bun-zinger-burger-1.jpg', '/images/menu/big-bun-zinger-burger-2.jpg'],
     spicy: true,
     featured: true,
   },
@@ -220,7 +220,7 @@ export const BASE_ITEMS: MenuItem[] = [
     ],
     description:
       "Crispy zinger fillet with a slab of melting cheddar, crunchy lettuce and a swipe of garlic mayo.",
-    images: [P.burger2, P.burger1],
+    images: ['/images/menu/zinger-cheese-burger-1.jpg', '/images/menu/zinger-cheese-burger-2.jpg'],
     spicy: true,
     featured: true,
     trending: true,
@@ -236,7 +236,7 @@ export const BASE_ITEMS: MenuItem[] = [
     ],
     description:
       "Two textures in one bun — a crunchy zinger fillet stacked over a juicy grilled chicken patty.",
-    images: [P.burger3, P.burger4],
+    images: ['/images/menu/zinger-patty-burger-1.jpg', '/images/menu/zinger-patty-burger-2.jpg'],
     spicy: true,
   },
   {
@@ -250,7 +250,7 @@ export const BASE_ITEMS: MenuItem[] = [
     ],
     description:
       "Twice the fillet, twice the crunch. Built for an appetite that skipped lunch.",
-    images: [P.burger4, P.burger5],
+    images: ['/images/menu/double-zinger-burger-1.jpg', '/images/menu/double-zinger-burger-2.jpg'],
     spicy: true,
     trending: true,
   },
@@ -262,7 +262,7 @@ export const BASE_ITEMS: MenuItem[] = [
     variants: [{ label: "Regular", price: 700 }],
     description:
       "The chef's own build — zinger fillet, smoked cheese, caramelised onion and our signature sauce.",
-    images: [P.burger5, P.burger2],
+    images: ['/images/menu/mc-signature-burger-1.jpg', '/images/menu/mc-signature-burger-2.jpg'],
     featured: true,
     isNew: true,
   },
@@ -277,7 +277,7 @@ export const BASE_ITEMS: MenuItem[] = [
     ],
     description:
       "The everyday classic — tender grilled chicken, fresh salad and creamy mayo in a soft milk bun.",
-    images: [P.burger6, P.burger7],
+    images: ['/images/menu/chicken-burger-1.jpg', '/images/menu/chicken-burger-2.jpg'],
   },
   {
     id: "chicken-cheese-burger",
@@ -290,7 +290,7 @@ export const BASE_ITEMS: MenuItem[] = [
     ],
     description:
       "Grilled chicken under a blanket of cheese that melts into every single bite.",
-    images: [P.burger7, P.burger6],
+    images: ['/images/menu/chicken-cheese-burger-1.jpg', '/images/menu/chicken-cheese-burger-2.jpg'],
   },
   {
     id: "chicken-patty-burger",
@@ -303,7 +303,7 @@ export const BASE_ITEMS: MenuItem[] = [
     ],
     description:
       "A crisp golden chicken patty with ketchup and mayo — the quick, honest hunger fix.",
-    images: [P.burger6, P.burger1],
+    images: ['/images/menu/chicken-patty-burger-1.jpg', '/images/menu/chicken-patty-burger-2.jpg'],
   },
   {
     id: "chicken-zinger-burger",
@@ -313,7 +313,7 @@ export const BASE_ITEMS: MenuItem[] = [
     variants: [{ label: "Regular", price: 300 }],
     description:
       "Spiced zinger fillet, shredded lettuce and cool mayo — the one people come back for.",
-    images: [P.burger3, P.burger2],
+    images: ['/images/menu/chicken-zinger-burger-1.jpg', '/images/menu/chicken-zinger-burger-2.jpg'],
     spicy: true,
   },
 
@@ -329,7 +329,7 @@ export const BASE_ITEMS: MenuItem[] = [
     ],
     description:
       "Hand-breaded chicken nuggets, fried golden and served with a dip on the side.",
-    images: [P.chicken1, P.chicken3],
+    images: ['/images/menu/chicken-nuggets-1.jpg', '/images/menu/chicken-nuggets-2.jpg'],
   },
   {
     id: "chicken-bucket-12-pcs",
@@ -339,7 +339,7 @@ export const BASE_ITEMS: MenuItem[] = [
     variants: [{ label: "Bucket", price: 1800 }],
     description:
       "Twelve pieces of crispy fried chicken piled into a bucket — the centrepiece of a family table.",
-    images: [P.chicken3, P.chicken2],
+    images: ['/images/menu/chicken-bucket-12-pcs-1.jpg', '/images/menu/chicken-bucket-12-pcs-2.jpg'],
     featured: true,
   },
   {
@@ -350,7 +350,7 @@ export const BASE_ITEMS: MenuItem[] = [
     variants: [{ label: "10 Pcs", price: 700 }],
     description:
       "Ten fiery wings tossed in our chilli glaze — sticky fingers guaranteed.",
-    images: [P.chicken2, P.chicken4],
+    images: ['/images/menu/hot-wings-10-pcs-1.jpg', '/images/menu/hot-wings-10-pcs-2.jpg'],
     spicy: true,
     trending: true,
   },
@@ -365,7 +365,7 @@ export const BASE_ITEMS: MenuItem[] = [
     ],
     description:
       "Bite-sized boneless chicken with a serious kick — dangerously easy to finish.",
-    images: [P.chicken4, P.chicken1],
+    images: ['/images/menu/hot-shots-1.jpg', '/images/menu/hot-shots-2.jpg'],
     spicy: true,
   },
 
@@ -381,7 +381,7 @@ export const BASE_ITEMS: MenuItem[] = [
     ],
     description:
       "Thick-cut potatoes fried twice for a crisp shell and a fluffy middle, finished with fine salt.",
-    images: [P.fries1, P.fries2],
+    images: ['/images/menu/french-fries-1.jpg', '/images/menu/french-fries-2.jpg'],
   },
   {
     id: "mayo-fries",
@@ -393,7 +393,7 @@ export const BASE_ITEMS: MenuItem[] = [
       { label: "Large", price: 450 },
     ],
     description: "Hot fries drenched in cool, creamy house mayo.",
-    images: [P.fries2, P.fries3],
+    images: ['/images/menu/mayo-fries-1.jpg', '/images/menu/mayo-fries-2.jpg'],
   },
   {
     id: "family-fries",
@@ -403,7 +403,7 @@ export const BASE_ITEMS: MenuItem[] = [
     variants: [{ label: "Family", price: 350 }],
     description:
       "A generous share-tray of golden fries — order one, everyone reaches in.",
-    images: [P.fries3, P.fries1],
+    images: ['/images/menu/family-fries-1.jpg', '/images/menu/family-fries-2.jpg'],
   },
   {
     id: "masala-fries",
@@ -413,7 +413,7 @@ export const BASE_ITEMS: MenuItem[] = [
     variants: [{ label: "Regular", price: 299 }],
     description:
       "Crisp fries dusted in our roasted masala blend — Peshawar's favourite way to eat potatoes.",
-    images: [P.fries1, P.fries3],
+    images: ['/images/menu/masala-fries-1.jpg', '/images/menu/masala-fries-2.jpg'],
     spicy: true,
     isNew: true,
   },
@@ -425,7 +425,7 @@ export const BASE_ITEMS: MenuItem[] = [
     variants: [{ label: "Regular", price: 350 }],
     description:
       "Golden fries under a heavy pour of roasted garlic mayo and fresh herbs.",
-    images: [P.fries2, P.fries1],
+    images: ['/images/menu/garlic-mayo-fries-1.jpg', '/images/menu/garlic-mayo-fries-2.jpg'],
   },
   {
     id: "loaded-cheese-fries",
@@ -438,7 +438,7 @@ export const BASE_ITEMS: MenuItem[] = [
     ],
     description:
       "Fries buried under molten cheese sauce and crispy chicken bits. Bring a fork.",
-    images: [P.fries3, P.fries2],
+    images: ['/images/menu/loaded-cheese-fries-1.jpg', '/images/menu/loaded-cheese-fries-2.jpg'],
     featured: true,
     trending: true,
   },
@@ -456,7 +456,7 @@ export const BASE_ITEMS: MenuItem[] = [
     ],
     description:
       "Chicken shaved straight off the spit, wrapped with garlic sauce, pickles and fries.",
-    images: [P.wrap1, P.wrap2],
+    images: ['/images/menu/chicken-shawarma-1.jpg', '/images/menu/chicken-shawarma-2.jpg'],
     featured: true,
   },
   {
@@ -471,7 +471,7 @@ export const BASE_ITEMS: MenuItem[] = [
     ],
     description:
       "Crunchy zinger strips rolled into warm bread with hot sauce and crisp salad.",
-    images: [P.wrap2, P.wrap3],
+    images: ['/images/menu/zinger-shawarma-1.jpg', '/images/menu/zinger-shawarma-2.jpg'],
     spicy: true,
     trending: true,
   },
@@ -483,7 +483,7 @@ export const BASE_ITEMS: MenuItem[] = [
     variants: [{ label: "Regular", price: 250 }],
     description:
       "Chicken shawarma lifted with briny black olives and a lemony garlic whip.",
-    images: [P.wrap3, P.wrap1],
+    images: ['/images/menu/olive-shawarma-1.jpg', '/images/menu/olive-shawarma-2.jpg'],
   },
   {
     id: "chicken-cheese-shawarma",
@@ -497,7 +497,7 @@ export const BASE_ITEMS: MenuItem[] = [
     ],
     description:
       "The classic wrap with a melting cheese layer pressed right through the middle.",
-    images: [P.wrap1, P.wrap3],
+    images: ['/images/menu/chicken-cheese-shawarma-1.jpg', '/images/menu/chicken-cheese-shawarma-2.jpg'],
   },
   {
     id: "mc-arabic-roll",
@@ -507,7 +507,7 @@ export const BASE_ITEMS: MenuItem[] = [
     variants: [{ label: "Regular", price: 550 }],
     description:
       "A heavyweight Arabic-style roll — spiced chicken, garlic toum and fries in soft khubz.",
-    images: [P.wrap2, P.wrap1],
+    images: ['/images/menu/mc-arabic-roll-1.jpg', '/images/menu/mc-arabic-roll-2.jpg'],
     isNew: true,
   },
   {
@@ -518,7 +518,7 @@ export const BASE_ITEMS: MenuItem[] = [
     variants: [{ label: "Platter", price: 650 }],
     description:
       "Shawarma chicken plated with fries, salad, khubz and a trio of sauces.",
-    images: [P.bowl, P.wrap2],
+    images: ['/images/menu/mc-arabic-platter-1.jpg', '/images/menu/mc-arabic-platter-2.jpg'],
     featured: true,
   },
   {
@@ -529,7 +529,7 @@ export const BASE_ITEMS: MenuItem[] = [
     variants: [{ label: "Regular", price: 600 }],
     description:
       "Zinger strips, fries and peri sauce twisted into a warm tortilla and grilled.",
-    images: [P.wrap3, P.wrap2],
+    images: ['/images/menu/mc-twister-roll-1.jpg', '/images/menu/mc-twister-roll-2.jpg'],
     isNew: true,
   },
 
@@ -545,7 +545,7 @@ export const BASE_ITEMS: MenuItem[] = [
     ],
     description:
       "Flaky hot paratha wrapped around spiced chicken, onion and green chutney.",
-    images: [P.wrap2, P.wrap1],
+    images: ['/images/menu/chicken-paratha-roll-1.jpg', '/images/menu/chicken-paratha-roll-2.jpg'],
     featured: true,
   },
   {
@@ -560,7 +560,7 @@ export const BASE_ITEMS: MenuItem[] = [
     ],
     description:
       "Crispy zinger strips folded into buttery paratha with mayo and hot sauce.",
-    images: [P.wrap1, P.wrap3],
+    images: ['/images/menu/zinger-paratha-roll-1.jpg', '/images/menu/zinger-paratha-roll-2.jpg'],
     spicy: true,
     trending: true,
   },
@@ -576,7 +576,7 @@ export const BASE_ITEMS: MenuItem[] = [
     ],
     description:
       "Turkish-spiced chicken, sumac onions and yoghurt sauce in a griddled paratha.",
-    images: [P.wrap3, P.wrap2],
+    images: ['/images/menu/turkish-chicken-roll-1.jpg', '/images/menu/turkish-chicken-roll-2.jpg'],
     isNew: true,
   },
   {
@@ -590,7 +590,7 @@ export const BASE_ITEMS: MenuItem[] = [
     ],
     description:
       "Our chicken roll with cheese melted onto the paratha before it is rolled.",
-    images: [P.wrap2, P.wrap3],
+    images: ['/images/menu/chicken-cheese-paratha-roll-1.jpg', '/images/menu/chicken-cheese-paratha-roll-2.jpg'],
   },
 
   /* -------------------------- CONTINENTAL -------------------------- */
@@ -607,7 +607,7 @@ export const BASE_ITEMS: MenuItem[] = [
     ],
     description:
       "Wok-tossed noodles with shredded chicken, julienne vegetables and dark soy.",
-    images: [P.noodles, P.bowl],
+    images: ['/images/menu/chicken-chowmein-1.jpg', '/images/menu/chicken-chowmein-2.jpg'],
     featured: true,
   },
   {
@@ -621,7 +621,7 @@ export const BASE_ITEMS: MenuItem[] = [
     ],
     description:
       "Long-grain rice fried hard and fast with egg, spring onion and chicken.",
-    images: [P.rice, P.noodles],
+    images: ['/images/menu/chicken-fried-rice-1.jpg', '/images/menu/chicken-fried-rice-2.jpg'],
   },
   {
     id: "chicken-chilli-dry-with-rice",
@@ -634,7 +634,7 @@ export const BASE_ITEMS: MenuItem[] = [
     ],
     description:
       "Sticky chilli chicken with peppers and onion, served over steamed rice.",
-    images: [P.bowl, P.rice],
+    images: ['/images/menu/chicken-chilli-dry-with-rice-1.jpg', '/images/menu/chicken-chilli-dry-with-rice-2.jpg'],
     spicy: true,
   },
   {
@@ -648,7 +648,7 @@ export const BASE_ITEMS: MenuItem[] = [
     ],
     description:
       "Penne folded through a silky cream and cheese sauce with grilled chicken.",
-    images: [P.pasta1, P.pasta2],
+    images: ['/images/menu/white-sauce-pasta-1.jpg', '/images/menu/white-sauce-pasta-2.jpg'],
     trending: true,
   },
   {
@@ -662,7 +662,7 @@ export const BASE_ITEMS: MenuItem[] = [
     ],
     description:
       "Penne in a slow-simmered tomato and herb sauce with a chilli edge.",
-    images: [P.pasta2, P.pasta1],
+    images: ['/images/menu/red-sauce-penne-pasta-1.jpg', '/images/menu/red-sauce-penne-pasta-2.jpg'],
     spicy: true,
   },
   {
@@ -676,7 +676,7 @@ export const BASE_ITEMS: MenuItem[] = [
     ],
     description:
       "Layered pasta, chicken ragu and bechamel, baked until the top blisters.",
-    images: [P.pasta2, P.bowl],
+    images: ['/images/menu/lasagne-1.jpg', '/images/menu/lasagne-2.jpg'],
     featured: true,
     isNew: true,
   },
@@ -692,7 +692,7 @@ export const BASE_ITEMS: MenuItem[] = [
     ],
     description:
       "Marinated overnight, breaded by hand and fried to a deep golden crunch.",
-    images: [P.chicken3, P.chicken2],
+    images: ['/images/menu/drum-sticks-1.jpg', '/images/menu/drum-sticks-2.jpg'],
   },
 
   /* ----------------------------- PIZZA ----------------------------- */
@@ -708,7 +708,7 @@ export const BASE_ITEMS: MenuItem[] = [
     ],
     description:
       "Hand-stretched base loaded with chicken, peppers, olives and a double cheese pull.",
-    images: [P.pizza1, P.pizza2],
+    images: ['/images/menu/mc-special-pizza-1.jpg', '/images/menu/mc-special-pizza-2.jpg'],
     featured: true,
     trending: true,
   },
@@ -723,7 +723,7 @@ export const BASE_ITEMS: MenuItem[] = [
     ],
     description:
       "A folded pizza packed with chicken and mozzarella, baked until golden and puffed.",
-    images: [P.pizza2, P.pizza1],
+    images: ['/images/menu/calzone-pizza-1.jpg', '/images/menu/calzone-pizza-2.jpg'],
     isNew: true,
   },
 
@@ -736,7 +736,7 @@ export const BASE_ITEMS: MenuItem[] = [
     variants: [{ label: "Platter", price: 950 }],
     description:
       "Five roasted wings, two bihari rolls and a mound of fries on one loaded tray.",
-    images: [P.chicken3, P.chicken2],
+    images: ['/images/menu/roasted-platter-1.jpg', '/images/menu/roasted-platter-2.jpg'],
     featured: true,
   },
 ];
@@ -751,7 +751,7 @@ export const BASE_DEALS: Deal[] = [
     name: "Deal 1",
     price: 1050,
     includes: ["2 Arabic Shawarma", "1 Reg. Drink"],
-    image: P.wrap1,
+    image: '/images/menu/deal-1-1.jpg',
     featured: true,
   },
   {
@@ -759,7 +759,7 @@ export const BASE_DEALS: Deal[] = [
     name: "Deal 2",
     price: 1100,
     includes: ["3 Zinger Burger", "1 Reg. Fries", "1 Reg. Drink"],
-    image: P.burger2,
+    image: '/images/menu/deal-2-1.jpg',
     featured: true,
   },
   {
@@ -767,7 +767,7 @@ export const BASE_DEALS: Deal[] = [
     name: "Deal 3",
     price: 1500,
     includes: ["5 Zinger Burger", "1 Reg. Fries"],
-    image: P.burger1,
+    image: '/images/menu/deal-3-1.jpg',
     featured: true,
   },
   {
@@ -775,42 +775,42 @@ export const BASE_DEALS: Deal[] = [
     name: "Deal 4",
     price: 650,
     includes: ["2 Chicken Patty Burger", "1 Reg. Fries"],
-    image: P.burger6,
+    image: '/images/menu/deal-4-1.jpg',
   },
   {
     id: "deal-5",
     name: "Deal 5",
     price: 600,
     includes: ["1 Zinger Tower Burger", "1 Reg. Fries"],
-    image: P.burger4,
+    image: '/images/menu/deal-5-1.jpg',
   },
   {
     id: "deal-6",
     name: "Deal 6",
     price: 700,
     includes: ["1 Double Decker Burger", "1 Reg. Fries"],
-    image: P.burger5,
+    image: '/images/menu/deal-6-1.jpg',
   },
   {
     id: "deal-7",
     name: "Deal 7",
     price: 1150,
     includes: ["5 Special Shawarma", "1 Ltr Drink"],
-    image: P.wrap2,
+    image: '/images/menu/deal-7-1.jpg',
   },
   {
     id: "deal-8",
     name: "Deal 8",
     price: 1050,
     includes: ["3 MC Zinger Shawarma", "1 Ltr Drink"],
-    image: P.wrap3,
+    image: '/images/menu/deal-8-1.jpg',
   },
   {
     id: "deal-9",
     name: "Deal 9",
     price: 1400,
     includes: ["4 MC Zinger Paratha Roll", "1 Reg. Fries"],
-    image: P.wrap2,
+    image: '/images/menu/deal-9-1.jpg',
   },
   {
     id: "deal-10",
@@ -823,7 +823,7 @@ export const BASE_DEALS: Deal[] = [
       "1 Arabic Shawarma",
       "1.5 Ltr Drink",
     ],
-    image: P.bowl,
+    image: '/images/menu/deal-10-1.jpg',
     featured: true,
   },
   {
@@ -831,14 +831,14 @@ export const BASE_DEALS: Deal[] = [
     name: "Deal 11",
     price: 1200,
     includes: ["4 Crispy Boneless Pcs"],
-    image: P.chicken3,
+    image: '/images/menu/deal-11-1.jpg',
   },
   {
     id: "midnight-deal-1",
     name: "Midnight Deal 1",
     price: 1450,
     includes: ["5 Zinger Burger", "1.5 Ltr Drink"],
-    image: P.burger3,
+    image: '/images/menu/midnight-deal-1-1.jpg',
     midnight: true,
   },
   {
@@ -846,7 +846,7 @@ export const BASE_DEALS: Deal[] = [
     name: "Midnight Deal 2",
     price: 699,
     includes: ["1 Small Pizza", "1 Large Shawarma", "1 Reg. Drink"],
-    image: P.pizza2,
+    image: '/images/menu/midnight-deal-2-1.jpg',
     midnight: true,
   },
 ];

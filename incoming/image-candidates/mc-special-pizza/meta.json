@@ -1,0 +1,20 @@
+{
+  "query": "supreme pizza whole",
+  "files": [
+    {
+      "file": "01.jpg",
+      "credit": "Shameel mukkath / Pexels",
+      "link": "https://www.pexels.com/photo/a-close-up-shot-of-a-pizza-5640020/"
+    },
+    {
+      "file": "02.jpg",
+      "credit": "Amit Fulwaria / Pexels",
+      "link": "https://www.pexels.com/photo/top-view-of-a-pizza-on-a-wooden-cutting-board-20115308/"
+    },
+    {
+      "file": "03.jpg",
+      "credit": "Dan Badiu / Pexels",
+      "link": "https://www.pexels.com/photo/pizza-with-olives-18832949/"
+    }
+  ]
+}

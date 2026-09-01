@@ -1,0 +1,20 @@
+{
+  "query": "chicken cheeseburger melting cheese",
+  "files": [
+    {
+      "file": "01.jpg",
+      "credit": "Ron Lach / Pexels",
+      "link": "https://www.pexels.com/photo/cooking-burger-patties-with-cheese-on-top-8880741/"
+    },
+    {
+      "file": "02.jpg",
+      "credit": "Moisés Delgado / Pexels",
+      "link": "https://www.pexels.com/photo/close-up-shot-of-a-cheeseburger-10861569/"
+    },
+    {
+      "file": "03.jpg",
+      "credit": "Horizon Content / Pexels",
+      "link": "https://www.pexels.com/photo/burger-with-cheese-3727243/"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "query": "arabic chicken pita roll",
+  "files": [
+    {
+      "file": "01.jpg",
+      "credit": "Shameel mukkath / Pexels",
+      "link": "https://www.pexels.com/photo/food-with-sides-on-a-wooden-tray-5175629/"
+    },
+    {
+      "file": "02.jpg",
+      "credit": "HamZa NOUASRIA / Pexels",
+      "link": "https://www.pexels.com/photo/a-close-up-shot-of-a-delicious-wrap-10837796/"
+    },
+    {
+      "file": "03.jpg",
+      "credit": "Omar B Shokerat / Pexels",
+      "link": "https://www.pexels.com/photo/close-up-of-a-tortilla-and-fries-with-chili-peppers-in-the-background-18177330/"
+    }
+  ]
+}

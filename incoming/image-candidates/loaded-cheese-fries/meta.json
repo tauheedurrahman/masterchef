@@ -1,0 +1,20 @@
+{
+  "query": "cheese sauce loaded fries",
+  "files": [
+    {
+      "file": "01.jpg",
+      "credit": "Nadin Sh / Pexels",
+      "link": "https://www.pexels.com/photo/french-fries-with-meat-cheese-and-herbs-20535803/"
+    },
+    {
+      "file": "02.jpg",
+      "credit": "Nadin Sh / Pexels",
+      "link": "https://www.pexels.com/photo/french-fries-with-meat-cheese-and-herbs-20535802/"
+    },
+    {
+      "file": "03.jpg",
+      "credit": "Sandeep Joy / Pexels",
+      "link": "https://www.pexels.com/photo/meal-with-sauce-15838896/"
+    }
+  ]
+}

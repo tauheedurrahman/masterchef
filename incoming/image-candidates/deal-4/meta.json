@@ -1,0 +1,20 @@
+{
+  "query": "two chicken burgers fries",
+  "files": [
+    {
+      "file": "01.jpg",
+      "credit": "Ali Dashti / Pexels",
+      "link": "https://www.pexels.com/photo/man-eating-fast-food-20003235/"
+    },
+    {
+      "file": "02.jpg",
+      "credit": "Ali Dashti / Pexels",
+      "link": "https://www.pexels.com/photo/man-hold-tray-with-street-food-20003230/"
+    },
+    {
+      "file": "03.jpg",
+      "credit": "Mariam x / Pexels",
+      "link": "https://www.pexels.com/photo/crispy-chicken-burger-and-fries-on-wooden-board-34407059/"
+    }
+  ]
+}

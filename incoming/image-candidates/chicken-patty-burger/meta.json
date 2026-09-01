@@ -1,0 +1,20 @@
+{
+  "query": "breaded chicken patty sandwich",
+  "files": [
+    {
+      "file": "01.jpg",
+      "credit": "Abdul Malik / Pexels",
+      "link": "https://www.pexels.com/photo/delicious-cheeseburger-with-lettuce-and-sauce-37437801/"
+    },
+    {
+      "file": "02.jpg",
+      "credit": "Syed Saud Ahmed / Pexels",
+      "link": "https://www.pexels.com/photo/close-up-of-mouthwatering-hamburger-on-black-background-6850423/"
+    },
+    {
+      "file": "03.jpg",
+      "credit": "Mariam x / Pexels",
+      "link": "https://www.pexels.com/photo/crispy-chicken-burger-and-fries-on-wooden-board-34407059/"
+    }
+  ]
+}

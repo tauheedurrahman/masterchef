@@ -1,0 +1,20 @@
+{
+  "query": "shawarma wrap black olives",
+  "files": [
+    {
+      "file": "01.jpg",
+      "credit": "Shameel mukkath / Pexels",
+      "link": "https://www.pexels.com/photo/food-with-sides-on-a-wooden-tray-5175629/"
+    },
+    {
+      "file": "02.jpg",
+      "credit": "Omar B Shokerat / Pexels",
+      "link": "https://www.pexels.com/photo/shawarma-for-lunch-18177325/"
+    },
+    {
+      "file": "03.jpg",
+      "credit": "RDNE Stock project / Pexels",
+      "link": "https://www.pexels.com/photo/close-up-shot-of-a-person-slicing-a-shawarma-5779372/"
+    }
+  ]
+}

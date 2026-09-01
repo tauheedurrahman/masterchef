@@ -1,0 +1,20 @@
+{
+  "query": "burgers large soda bottle",
+  "files": [
+    {
+      "file": "01.jpg",
+      "credit": "Eric Moura / Pexels",
+      "link": "https://www.pexels.com/photo/delicious-burger-feast-with-coca-cola-33068080/"
+    },
+    {
+      "file": "02.jpg",
+      "credit": "Mounir Salah / Pexels",
+      "link": "https://www.pexels.com/photo/close-up-shot-of-a-delicious-cheeseburger-on-wooden-surface-14709733/"
+    },
+    {
+      "file": "03.jpg",
+      "credit": "Emine Gizem / Pexels",
+      "link": "https://www.pexels.com/photo/hamburger-and-fries-23996328/"
+    }
+  ]
+}
