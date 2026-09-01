@@ -1,0 +1,22 @@
+# Local build/runtime artifacts
+.next/
+out/
+node_modules/
+
+# Imported menu input (photos can be large)
+incoming/menu.csv
+incoming/images/*
+!incoming/images/README.txt
+
+# Generated menu images
+public/images/menu/*
+!public/images/menu/.gitkeep
+
+# Hero video (transcode locally)
+public/videos/*
+!public/videos/.gitkeep
+
+.env*
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts

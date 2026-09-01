@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="675" viewBox="0 0 900 675" role="img" aria-label="Master Chef photo placeholder">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#221e1c"/>
+      <stop offset="1" stop-color="#171412"/>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="675" fill="url(#g)"/>
+  <g fill="none" stroke="#3a332e" stroke-width="3">
+    <circle cx="450" cy="300" r="96"/>
+    <path d="M354 300h192M450 204v192"/>
+  </g>
+  <text x="450" y="470" text-anchor="middle" fill="#6d6156"
+        font-family="Oswald, 'Arial Narrow', Impact, sans-serif"
+        font-size="34" letter-spacing="9">MASTER CHEF</text>
+  <text x="450" y="510" text-anchor="middle" fill="#4a423b"
+        font-family="Inter, system-ui, sans-serif" font-size="20" letter-spacing="2">Photo coming soon</text>
+</svg>

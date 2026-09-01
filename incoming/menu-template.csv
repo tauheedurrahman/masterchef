@@ -1,0 +1,4 @@
+name,category,subcategory,variants,description,image1,image2,spicy,featured,isNew,trending
+Peri Peri Zinger Burger,burgers,Zinger,Regular:420|Large:490,"Crispy zinger fillet tossed in peri peri glaze, with lettuce and lemon mayo.",peri-zinger-1.jpg,peri-zinger-2.jpg,yes,yes,yes,no
+Cheese Shawarma Platter,shawarma,Arabic,Platter:700,"Shawarma chicken, melted cheese, fries and khubz on one loaded tray.",cheese-shawarma-platter.jpg,,no,no,no,yes
+Crispy Fried Wings,appetizers,Wings,6 Pcs:450|12 Pcs:850,"Double-breaded wings fried to order and served with garlic dip.",wings-1.jpg,wings-2.jpg,no,no,no,no
