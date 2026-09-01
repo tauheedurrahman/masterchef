@@ -8,9 +8,8 @@ incoming/menu.csv
 incoming/images/*
 !incoming/images/README.txt
 
-# Generated menu images
-public/images/menu/*
-!public/images/menu/.gitkeep
+# Image review candidates (throwaway — only the promoted photos are kept)
+incoming/image-candidates/
 
 # Hero video (transcode locally)
 public/videos/*
