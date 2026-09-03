@@ -1,7 +1,7 @@
 import { insforgeAdmin } from "@/lib/insforge";
 
 const PAGE_SIZE = 50;
-const STATUSES = ["new", "preparing", "out_for_delivery", "delivered", "cancelled"];
+const STATUSES = ["new", "confirmed", "preparing", "out_for_delivery", "delivered", "cancelled"];
 
 /** GET /api/admin/orders?status=new&page=0 — newest first, 50 per page. */
 export async function GET(request: Request) {

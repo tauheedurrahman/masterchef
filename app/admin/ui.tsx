@@ -33,6 +33,7 @@ export interface OrderRow {
 
 export const STATUSES = [
   "new",
+  "confirmed",
   "preparing",
   "out_for_delivery",
   "delivered",
@@ -41,6 +42,7 @@ export const STATUSES = [
 
 export const STATUS_LABELS: Record<string, string> = {
   new: "New",
+  confirmed: "Confirmed",
   preparing: "Preparing",
   out_for_delivery: "Out for Delivery",
   delivered: "Delivered",

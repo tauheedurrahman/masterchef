@@ -112,6 +112,7 @@ export const ADMIN_CSS = `
   font-size: 11.5px; font-weight: 600; letter-spacing: .03em; white-space: nowrap;
 }
 .adm__pill[data-s="new"] { background: #dbeafe; color: var(--blue); }
+.adm__pill[data-s="confirmed"] { background: #cffafe; color: #0e7490; }
 .adm__pill[data-s="preparing"] { background: #fef3c7; color: var(--amber); }
 .adm__pill[data-s="out_for_delivery"] { background: #ede9fe; color: var(--purple); }
 .adm__pill[data-s="delivered"] { background: #dcfce7; color: var(--green); }
@@ -138,7 +139,8 @@ export const ADMIN_CSS = `
 
 .adm label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 5px; }
 .adm input[type=text], .adm input[type=password], .adm input[type=number],
-.adm input[type=email], .adm select, .adm textarea {
+.adm input[type=email], .adm input[type=search], .adm input[type=date],
+.adm select, .adm textarea {
   width: 100%; padding: 9px 11px; border: 1px solid var(--line); border-radius: 7px;
   font: inherit; font-size: 13.5px; background: #fff; color: var(--ink);
 }

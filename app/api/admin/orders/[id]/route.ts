@@ -1,6 +1,6 @@
 import { insforgeAdmin } from "@/lib/insforge";
 
-const STATUSES = ["new", "preparing", "out_for_delivery", "delivered", "cancelled"];
+const STATUSES = ["new", "confirmed", "preparing", "out_for_delivery", "delivered", "cancelled"];
 
 /** PATCH /api/admin/orders/[id] — change status. */
 export async function PATCH(

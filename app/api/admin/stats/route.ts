@@ -41,7 +41,7 @@ export async function GET() {
   const revenue = billable.reduce((sum, o) => sum + (o.total ?? 0), 0);
 
   const byStatus: Record<string, number> = {
-    new: 0, preparing: 0, out_for_delivery: 0, delivered: 0, cancelled: 0,
+    new: 0, confirmed: 0, preparing: 0, out_for_delivery: 0, delivered: 0, cancelled: 0,
   };
   for (const o of today) byStatus[o.status] = (byStatus[o.status] ?? 0) + 1;
 
