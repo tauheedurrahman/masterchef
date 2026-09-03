@@ -7,7 +7,6 @@ import { ArrowRightIcon } from "./Icons";
 /** Sign in / create account — UI only, nothing is authenticated. */
 export default function AuthTabs() {
   const [tab, setTab] = useState<"signin" | "signup">("signin");
-  const [note, setNote] = useState<string | null>(null);
 
   return (
     <div className="auth__card">
@@ -22,10 +21,7 @@ export default function AuthTabs() {
           role="tab"
           aria-selected={tab === "signin"}
           data-active={tab === "signin" ? "true" : "false"}
-          onClick={() => {
-            setTab("signin");
-            setNote(null);
-          }}
+          onClick={() => setTab("signin")}
         >
           Sign in
         </button>
@@ -34,10 +30,7 @@ export default function AuthTabs() {
           role="tab"
           aria-selected={tab === "signup"}
           data-active={tab === "signup" ? "true" : "false"}
-          onClick={() => {
-            setTab("signup");
-            setNote(null);
-          }}
+          onClick={() => setTab("signup")}
         >
           Create account
         </button>
@@ -45,12 +38,7 @@ export default function AuthTabs() {
 
       <form
         className="stack"
-        onSubmit={(e) => {
-          e.preventDefault();
-          setNote(
-            "This is a demo storefront — accounts are not created and nothing is stored."
-          );
-        }}
+        onSubmit={(e) => e.preventDefault()}
       >
         {tab === "signup" && (
           <div className="form-field">
@@ -93,8 +81,6 @@ export default function AuthTabs() {
           {tab === "signin" ? "Sign in" : "Create account"}{" "}
           <ArrowRightIcon size={16} />
         </button>
-
-        {note && <p className="demo-note">{note}</p>}
 
         <p className="summary__note" style={{ textAlign: "center" }}>
           {tab === "signin" ? (

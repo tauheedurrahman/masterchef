@@ -1,39 +1,32 @@
 /**
  * ============================================================================
- *  THE BACKEND-SWAP SEAM
+ *  THE BACKEND-SWAP SEAM  —  now backed by InsForge
  * ============================================================================
  *
- * Every page and component in this app reads menu data through THIS module and
- * nothing else. It is deliberately async: each function returns a Promise, even
- * though today it resolves synchronously out of lib/data.ts.
+ * Every page and component reads menu data through THIS module and nothing
+ * else. The signatures below are unchanged from the mock era; only the bodies
+ * moved from lib/data.ts to InsForge Postgres.
  *
- * When a real backend lands, replace the *bodies* below with fetch() calls —
- * e.g.
+ * Reads go through the ADMIN client on purpose. RLS grants the anon role only
+ * `available = true` rows, but the storefront has to render sold-out items
+ * (greyed out, "Sold Out" badge) rather than hide them. This module is only
+ * ever imported from server components and route handlers, so the admin key
+ * never reaches the browser.
  *
- *     export async function getItems(opts: ItemQuery = {}): Promise<MenuItem[]> {
- *       const qs = new URLSearchParams(clean(opts) as Record<string, string>);
- *       const res = await fetch(`${process.env.API_URL}/items?${qs}`, {
- *         next: { revalidate: 60 },
- *       });
- *       if (!res.ok) throw new Error(`getItems failed: ${res.status}`);
- *       return res.json();
- *     }
- *
- * Keep the signatures and the returned shapes identical and NO page, route or
- * component needs to change. That is the whole point of this file.
- *
- * (Filtering/sorting is done here rather than in the pages precisely so that a
- * real API can take that work over without any caller noticing.)
+ * Filtering and sorting still happen here so callers stay identical.
  */
 
-import {
-  DEALS,
-  MENU_ITEMS,
-  type CategorySlug,
-  type Deal,
-  type MenuItem,
-} from "./data";
+import { insforgeAdmin } from "./insforge";
+import { type CategorySlug, type Deal, type MenuItem } from "./data";
 import { minPrice } from "./format";
+
+// Hard stop if this ever gets pulled into a client bundle — the admin key
+// below must never ship to a browser.
+if (typeof window !== "undefined") {
+  throw new Error(
+    "lib/api.ts is server-only. Fetch through a server component or route handler."
+  );
+}
 
 export type SortKey = "featured" | "price-asc" | "price-desc" | "newest";
 
@@ -52,12 +45,130 @@ export interface ItemQuery {
   limit?: number;
 }
 
-/** Simulates network latency without actually being slow. */
-function resolve<T>(value: T): Promise<T> {
-  return Promise.resolve(value);
+/**
+ * A menu item as it comes back from the database. Structurally a MenuItem plus
+ * the two columns the storefront and admin need. Anywhere a MenuItem was
+ * accepted before, this still fits.
+ */
+export interface MenuItemRow extends MenuItem {
+  available: boolean;
+  sortOrder: number;
 }
 
-function matchesQuery(item: MenuItem, q: string): boolean {
+export interface DealRow extends Deal {
+  available: boolean;
+}
+
+/* ------------------------------------------------------------------ *
+ * Row mapping — snake_case columns to the camelCase shape pages expect
+ * ------------------------------------------------------------------ */
+
+type RawItem = {
+  id: string;
+  name: string;
+  category: string;
+  subcategory: string;
+  variants: unknown;
+  description: string | null;
+  images: unknown;
+  spicy: boolean | null;
+  featured: boolean | null;
+  is_new: boolean | null;
+  trending: boolean | null;
+  available: boolean | null;
+  sort_order: number | null;
+};
+
+type RawDeal = {
+  id: string;
+  name: string;
+  price: number;
+  includes: unknown;
+  image: string | null;
+  midnight: boolean | null;
+  featured: boolean | null;
+  available: boolean | null;
+};
+
+const PLACEHOLDER = "/images/placeholder.svg";
+
+function asArray<T>(value: unknown): T[] {
+  if (Array.isArray(value)) return value as T[];
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? (parsed as T[]) : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+function toItem(row: RawItem): MenuItemRow {
+  const images = asArray<string>(row.images);
+  return {
+    id: row.id,
+    name: row.name,
+    category: row.category as CategorySlug,
+    subcategory: row.subcategory,
+    variants: asArray<{ label: string; price: number }>(row.variants),
+    description: row.description ?? "",
+    images: [images[0] ?? PLACEHOLDER, images[1] ?? images[0] ?? PLACEHOLDER],
+    spicy: row.spicy ?? false,
+    featured: row.featured ?? false,
+    isNew: row.is_new ?? false,
+    trending: row.trending ?? false,
+    available: row.available ?? true,
+    sortOrder: row.sort_order ?? 0,
+  };
+}
+
+function toDeal(row: RawDeal): DealRow {
+  return {
+    id: row.id,
+    name: row.name,
+    price: row.price,
+    includes: asArray<string>(row.includes),
+    image: row.image ?? PLACEHOLDER,
+    midnight: row.midnight ?? false,
+    featured: row.featured ?? false,
+    available: row.available ?? true,
+  };
+}
+
+/** Every read funnels through here so a backend error is loud but not fatal. */
+async function fetchItems(): Promise<MenuItemRow[]> {
+  const { data, error } = await insforgeAdmin()
+    .database.from("menu_items")
+    .select()
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    console.error("[api] menu_items read failed:", error.message ?? error);
+    return [];
+  }
+  return (data as RawItem[] | null)?.map(toItem) ?? [];
+}
+
+async function fetchDeals(): Promise<DealRow[]> {
+  const { data, error } = await insforgeAdmin()
+    .database.from("deals")
+    .select()
+    .order("id", { ascending: true });
+
+  if (error) {
+    console.error("[api] deals read failed:", error.message ?? error);
+    return [];
+  }
+  return (data as RawDeal[] | null)?.map(toDeal) ?? [];
+}
+
+/* ------------------------------------------------------------------ *
+ * Filtering / sorting (unchanged behaviour)
+ * ------------------------------------------------------------------ */
+
+function matchesQuery(item: MenuItemRow, q: string): boolean {
   const needle = q.trim().toLowerCase();
   if (!needle) return true;
   const haystack = [
@@ -69,11 +180,10 @@ function matchesQuery(item: MenuItem, q: string): boolean {
   ]
     .join(" ")
     .toLowerCase();
-  // Every whitespace-separated token must appear somewhere.
   return needle.split(/\s+/).every((token) => haystack.includes(token));
 }
 
-function sortItems(items: MenuItem[], sort: string | undefined): MenuItem[] {
+function sortItems(items: MenuItemRow[], sort: string | undefined): MenuItemRow[] {
   const list = [...items];
   switch (sort) {
     case "price-asc":
@@ -81,9 +191,7 @@ function sortItems(items: MenuItem[], sort: string | undefined): MenuItem[] {
     case "price-desc":
       return list.sort((a, b) => minPrice(b.variants) - minPrice(a.variants));
     case "newest":
-      return list.sort(
-        (a, b) => Number(!!b.isNew) - Number(!!a.isNew)
-      );
+      return list.sort((a, b) => Number(!!b.isNew) - Number(!!a.isNew));
     case "featured":
     default:
       return list.sort(
@@ -99,10 +207,10 @@ function sortItems(items: MenuItem[], sort: string | undefined): MenuItem[] {
  * ------------------------------------------------------------------ */
 
 /** Filtered + sorted menu items. All listing pages funnel through here. */
-export async function getItems(opts: ItemQuery = {}): Promise<MenuItem[]> {
+export async function getItems(opts: ItemQuery = {}): Promise<MenuItemRow[]> {
   const { category, subcategory, sort, query, limit } = opts;
 
-  let items = MENU_ITEMS;
+  let items = await fetchItems();
   if (category) items = items.filter((i) => i.category === category);
   if (subcategory) items = items.filter((i) => i.subcategory === subcategory);
   if (query) items = items.filter((i) => matchesQuery(i, query));
@@ -110,38 +218,52 @@ export async function getItems(opts: ItemQuery = {}): Promise<MenuItem[]> {
   items = sortItems(items, sort);
   if (limit && limit > 0) items = items.slice(0, limit);
 
-  return resolve(items);
+  return items;
 }
 
-export async function getItemById(id: string): Promise<MenuItem | null> {
-  return resolve(MENU_ITEMS.find((i) => i.id === id) ?? null);
+export async function getItemById(id: string): Promise<MenuItemRow | null> {
+  const { data, error } = await insforgeAdmin()
+    .database.from("menu_items")
+    .select()
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[api] getItemById failed:", error.message ?? error);
+    return null;
+  }
+  return data ? toItem(data as RawItem) : null;
 }
 
-export async function getFeatured(limit = 8): Promise<MenuItem[]> {
-  return resolve(MENU_ITEMS.filter((i) => i.featured).slice(0, limit));
+export async function getFeatured(limit = 8): Promise<MenuItemRow[]> {
+  const items = await fetchItems();
+  return items.filter((i) => i.featured).slice(0, limit);
 }
 
-export async function getNewArrivals(limit = 6): Promise<MenuItem[]> {
-  return resolve(MENU_ITEMS.filter((i) => i.isNew).slice(0, limit));
+export async function getNewArrivals(limit = 6): Promise<MenuItemRow[]> {
+  const items = await fetchItems();
+  return items.filter((i) => i.isNew).slice(0, limit);
 }
 
-export async function getTrending(limit = 6): Promise<MenuItem[]> {
-  return resolve(MENU_ITEMS.filter((i) => i.trending).slice(0, limit));
+export async function getTrending(limit = 6): Promise<MenuItemRow[]> {
+  const items = await fetchItems();
+  return items.filter((i) => i.trending).slice(0, limit);
 }
 
 /** Other items in the same category, excluding the item itself. */
-export async function getRelated(id: string, limit = 4): Promise<MenuItem[]> {
-  const item = MENU_ITEMS.find((i) => i.id === id);
-  if (!item) return resolve([]);
-  const related = MENU_ITEMS.filter(
-    (i) => i.category === item.category && i.id !== item.id
-  ).slice(0, limit);
-  return resolve(related);
+export async function getRelated(id: string, limit = 4): Promise<MenuItemRow[]> {
+  const items = await fetchItems();
+  const item = items.find((i) => i.id === id);
+  if (!item) return [];
+  return items
+    .filter((i) => i.category === item.category && i.id !== item.id)
+    .slice(0, limit);
 }
 
 /** Every category slug that currently has at least one item. */
 export async function getCategoriesInUse(): Promise<string[]> {
-  return resolve([...new Set(MENU_ITEMS.map((i) => i.category))]);
+  const items = await fetchItems();
+  return [...new Set(items.map((i) => i.category))];
 }
 
 /* ------------------------------------------------------------------ *
@@ -149,15 +271,18 @@ export async function getCategoriesInUse(): Promise<string[]> {
  * ------------------------------------------------------------------ */
 
 /** Regular (non-midnight) deals. */
-export async function getDeals(): Promise<Deal[]> {
-  return resolve(DEALS.filter((d) => !d.midnight));
+export async function getDeals(): Promise<DealRow[]> {
+  const deals = await fetchDeals();
+  return deals.filter((d) => !d.midnight);
 }
 
 /** Deals only offered after 10:30 PM. */
-export async function getMidnightDeals(): Promise<Deal[]> {
-  return resolve(DEALS.filter((d) => d.midnight));
+export async function getMidnightDeals(): Promise<DealRow[]> {
+  const deals = await fetchDeals();
+  return deals.filter((d) => d.midnight);
 }
 
-export async function getDealById(id: string): Promise<Deal | null> {
-  return resolve(DEALS.find((d) => d.id === id) ?? null);
+export async function getDealById(id: string): Promise<DealRow | null> {
+  const deals = await fetchDeals();
+  return deals.find((d) => d.id === id) ?? null;
 }

@@ -7,16 +7,18 @@ import QtyStepper from "./QtyStepper";
 import { CartIcon, FlameIcon } from "./Icons";
 import { useCart } from "@/lib/store";
 import { minPrice, money } from "@/lib/format";
-import type { MenuItem } from "@/lib/data";
+import type { MenuItemRow } from "@/lib/api";
 
 /**
  * Everything interactive on the item page: variant, quantity, special
  * instructions and the add-to-cart action. The displayed price always tracks
  * the selected variant.
  */
-export default function ItemPurchasePanel({ item }: { item: MenuItem }) {
+export default function ItemPurchasePanel({ item }: { item: MenuItemRow }) {
   const { add } = useCart();
   const single = item.variants.length === 1;
+  // Sold out: the page still renders in full, but nothing can be ordered.
+  const soldOut = item.available === false;
 
   // A size must be chosen before the item can be added. Single-price items
   // have nothing to choose, so they start selected.
@@ -73,15 +75,38 @@ export default function ItemPurchasePanel({ item }: { item: MenuItem }) {
       </div>
       <p className="detail__desc">{item.description}</p>
 
+      {soldOut && (
+        <p
+          role="status"
+          style={{
+            background: "#12100f",
+            color: "#f6efe3",
+            border: "1px solid #e8a33d",
+            borderRadius: 10,
+            padding: "11px 15px",
+            margin: "0 0 18px",
+            fontSize: 14,
+          }}
+        >
+          <b style={{ letterSpacing: ".1em", textTransform: "uppercase" }}>Sold out</b>
+          {" — "}this one is off the menu for now. Check back later or pick something else.
+        </p>
+      )}
+
       <div className="field-group">
         <span className="field-label">
           Choose size <span style={{ color: "var(--accent)" }}>*</span>
         </span>
-        <VariantSelector
-          variants={item.variants}
-          selected={variantLabel}
-          onSelect={setVariantLabel}
-        />
+        <div
+          style={soldOut ? { opacity: 0.5, pointerEvents: "none" } : undefined}
+          aria-disabled={soldOut}
+        >
+          <VariantSelector
+            variants={item.variants}
+            selected={variantLabel}
+            onSelect={setVariantLabel}
+          />
+        </div>
       </div>
 
       <div className="field-group">
@@ -107,7 +132,7 @@ export default function ItemPurchasePanel({ item }: { item: MenuItem }) {
         <button
           type="button"
           className="btn btn--lg"
-          disabled={!variant}
+          disabled={soldOut || !variant}
           onClick={() => {
             if (!variant) return;
             add({
@@ -123,7 +148,11 @@ export default function ItemPurchasePanel({ item }: { item: MenuItem }) {
           }}
         >
           <CartIcon size={18} />
-          {variant ? `Add to cart · ${money(lineTotal)}` : "Choose a size first"}
+          {soldOut
+            ? "Sold out"
+            : variant
+              ? `Add to cart · ${money(lineTotal)}`
+              : "Choose a size first"}
         </button>
         <Link href="/cart" className="btn btn--lg btn--ghost">
           View cart

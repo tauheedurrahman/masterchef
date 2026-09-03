@@ -3,7 +3,7 @@ import SafeImage from "./SafeImage";
 import QuickAddButton from "./QuickAddButton";
 import { FlameIcon } from "./Icons";
 import { money, minPrice } from "@/lib/format";
-import type { MenuItem } from "@/lib/data";
+import type { MenuItemRow } from "@/lib/api";
 
 /**
  * Listing card. Server component — only the quick-add control is interactive.
@@ -13,14 +13,16 @@ export default function MenuItemCard({
   item,
   sizes = "(max-width: 460px) 100vw, (max-width: 820px) 50vw, (max-width: 1100px) 33vw, 300px",
 }: {
-  item: MenuItem;
+  item: MenuItemRow;
   sizes?: string;
 }) {
   const from = minPrice(item.variants);
   const multi = item.variants.length > 1;
+  // Sold-out items stay in the listing — dimmed and un-addable, not hidden.
+  const soldOut = item.available === false;
 
   return (
-    <article className="card">
+    <article className="card" data-sold-out={soldOut ? "true" : "false"}>
       <div className="card__media">
         <Link
           href={`/item/${item.id}`}
@@ -47,6 +49,37 @@ export default function MenuItemCard({
           </span>
         </Link>
 
+        {soldOut && (
+          <span
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 3,
+              display: "grid",
+              placeItems: "center",
+              borderRadius: "inherit",
+              background: "rgba(18,16,15,.58)",
+              pointerEvents: "none",
+            }}
+          >
+            <span
+              style={{
+                background: "#12100f",
+                color: "#f6efe3",
+                border: "1px solid #e8a33d",
+                borderRadius: 999,
+                padding: "6px 16px",
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: ".14em",
+                textTransform: "uppercase",
+              }}
+            >
+              Sold Out
+            </span>
+          </span>
+        )}
+
         <div className="card__flags">
           {item.isNew && <span className="badge badge--gold">New</span>}
           {item.trending && !item.isNew && <span className="badge">Trending</span>}
@@ -64,7 +97,19 @@ export default function MenuItemCard({
           </span>
         </div>
 
-        <QuickAddButton item={item} />
+        {soldOut ? (
+          <button
+            type="button"
+            className="card__quick"
+            disabled
+            aria-label={`${item.name} is sold out`}
+            style={{ opacity: 0.55, cursor: "not-allowed", zIndex: 4 }}
+          >
+            Sold out
+          </button>
+        ) : (
+          <QuickAddButton item={item} />
+        )}
       </div>
 
       <div className="card__body">

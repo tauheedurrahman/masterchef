@@ -108,6 +108,9 @@ export default function CheckoutView() {
                 }
               : null,
           items: lines.map((l) => ({
+            // id lets the server re-price the line from the database — the
+            // price below is only a hint and is never trusted.
+            id: l.id,
             name: l.name,
             variant: l.kind === "deal" ? "Deal" : l.variantLabel,
             price: l.unitPrice,
