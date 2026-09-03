@@ -1,0 +1,4 @@
+# Import staging: raw CSV + candidate photos, used only by scripts/import-menu.mjs
+# and scripts/seed-db.mjs, which both run locally. ~46MB of dead weight in the
+# deployment zip, and the built-in excludes don't cover it.
+incoming/
