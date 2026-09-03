@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import FloatingWhatsAppButton from "@/components/FloatingWhatsAppButton";
 import Toaster from "@/components/Toaster";
 import { CartProvider } from "@/lib/store";
+import { AuthProvider } from "@/lib/auth-context";
 import { getItems } from "@/lib/api";
 import { minPrice } from "@/lib/format";
 import { SITE } from "@/lib/site";
@@ -72,13 +73,15 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${oswald.variable} ${inter.variable}`}>
       <body>
-        <CartProvider>
-          <Navbar index={index} />
-          <main>{children}</main>
-          <Footer />
-          <FloatingWhatsAppButton />
-          <Toaster />
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            <Navbar index={index} />
+            <main>{children}</main>
+            <Footer />
+            <FloatingWhatsAppButton />
+            <Toaster />
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );
