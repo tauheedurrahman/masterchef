@@ -12,11 +12,15 @@
  * row for order updates instead. `masterchef.local` is deliberately not a
  * routable domain — nothing should ever try to deliver to it.
  *
- * Sessions are the SDK's own: the access token lives in memory and is renewed
- * from an httpOnly refresh cookie. Nothing about auth is kept in localStorage.
+ * Where the work happens
+ * ----------------------
+ * The mutating calls below POST to /api/auth/*, they do not talk to InsForge
+ * from the browser. That is forced by the SDK: a cookie-backed browser client
+ * exposes only getCurrentUser/getProfile, and sign-in has to happen somewhere
+ * that can write httpOnly cookies. The upside is that no access or refresh
+ * token is ever visible to page JavaScript — the server strips them from the
+ * response and keeps them in cookies the browser cannot read.
  */
-
-import { insforge } from "./insforge";
 
 /* ------------------------------------------------------------------ *
  * Types
@@ -24,7 +28,7 @@ import { insforge } from "./insforge";
 
 export interface AuthUser {
   id: string;
-  email: string;
+  email: string | null;
   name: string | null;
 }
 
@@ -54,9 +58,11 @@ export interface Session {
 export interface Result<T> {
   data: T | null;
   error: string | null;
+  /** Machine-readable hint for the UI, e.g. PHONE_TAKEN. */
+  code?: string;
 }
 
-export type AuthEvent = "signedIn" | "signedOut" | "tokenRefreshed";
+export type AuthEvent = "signedIn" | "signedOut";
 
 /* ------------------------------------------------------------------ *
  * Phone handling
@@ -70,7 +76,7 @@ export function phoneDigits(phone: string): string {
   return (phone ?? "").replace(/\D/g, "");
 }
 
-/** Canonical display form: `0345-0676764`. */
+/** Canonical display and storage form: `0345-0676764`. */
 export function formatPhone(phone: string): string {
   const d = phoneDigits(phone);
   return d.length === 11 ? `${d.slice(0, 4)}-${d.slice(4)}` : d;
@@ -89,10 +95,10 @@ export function phoneToEmail(phone: string): string {
 }
 
 /* ------------------------------------------------------------------ *
- * Row mapping
+ * Row mapping — shared by the client and the route handlers
  * ------------------------------------------------------------------ */
 
-type RawCustomer = {
+export type RawCustomer = {
   id: string;
   auth_id: string | null;
   full_name: string;
@@ -126,53 +132,36 @@ export function toCustomer(row: RawCustomer): Customer {
   };
 }
 
-/** Turns an SDK error into something a customer can read. */
-function readableError(err: unknown, fallback: string): string {
-  const e = err as { statusCode?: number; error?: string; message?: string } | null;
-  if (!e) return fallback;
-  if (e.error === "INVALID_CREDENTIALS" || e.statusCode === 401) {
-    return "Invalid phone or password.";
-  }
-  if (e.error === "USER_ALREADY_EXISTS" || e.statusCode === 409) {
-    return "That phone number is already registered.";
-  }
-  return e.message || fallback;
-}
-
 /* ------------------------------------------------------------------ *
- * Customer profile
+ * Calls into /api/auth
  * ------------------------------------------------------------------ */
 
-/**
- * The `customers` row for a signed-in auth user.
- *
- * RLS scopes this to the caller's own row, so it returns null both when no
- * profile exists and when the caller is not signed in.
- */
-export async function getCustomer(authId: string): Promise<Customer | null> {
-  const { data, error } = await insforge
-    .database.from("customers")
-    .select("*")
-    .eq("auth_id", authId)
-    .maybeSingle();
-
-  if (error || !data) return null;
-  return toCustomer(data as RawCustomer);
+async function post<T>(url: string, body?: unknown): Promise<Result<T>> {
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+    const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    if (!res.ok) {
+      return {
+        data: null,
+        error: (json.error as string) ?? "Something went wrong. Please try again.",
+        code: json.code as string | undefined,
+      };
+    }
+    return { data: json as T, error: null };
+  } catch {
+    return { data: null, error: "No connection. Check your internet and try again." };
+  }
 }
 
-/* ------------------------------------------------------------------ *
- * Sign up / in / out
- * ------------------------------------------------------------------ */
-
 /**
- * Creates the auth account and its `customers` row.
+ * Creates the account and signs the customer in.
  *
- * `email` is the customer's real address and is optional — it goes on the
- * profile for order updates. The login identifier is always derived from the
- * phone number.
- *
- * If the profile insert fails (almost always a duplicate phone) the new session
- * is signed out again, so a half-made account cannot be used.
+ * `email` is the customer's real address and is optional — it is stored on the
+ * profile for order updates, never used to log in.
  */
 export async function signUp(
   phone: string,
@@ -186,105 +175,60 @@ export async function signUp(
   if ((password ?? "").length < 6) {
     return { data: null, error: "Password must be at least 6 characters." };
   }
-
-  const { data, error } = await insforge.auth.signUp({
-    email: phoneToEmail(phone),
+  return post<Session>("/api/auth/signup", {
+    phone,
     password,
     name: trimmedName,
+    email: (email ?? "").trim() || undefined,
   });
-
-  if (error || !data?.user) {
-    return { data: null, error: readableError(error, "Could not create your account.") };
-  }
-
-  const user: AuthUser = {
-    id: data.user.id,
-    email: data.user.email,
-    name: trimmedName,
-  };
-
-  const { data: inserted, error: profileError } = await insforge
-    .database.from("customers")
-    .insert([
-      {
-        auth_id: user.id,
-        full_name: trimmedName,
-        phone: formatPhone(phone),
-        email: (email ?? "").trim() || null,
-      },
-    ])
-    .select();
-
-  if (profileError) {
-    // Don't leave the caller holding a session with no profile behind it.
-    await insforge.auth.signOut().catch(() => {});
-    const dup = /duplicate|unique/i.test(
-      (profileError as { message?: string }).message ?? ""
-    );
-    return {
-      data: null,
-      error: dup
-        ? "That phone number is already registered."
-        : "Account created but your profile could not be saved. Please contact us.",
-    };
-  }
-
-  const row = (inserted as RawCustomer[] | null)?.[0];
-  return { data: { user, customer: row ? toCustomer(row) : null }, error: null };
 }
 
 /** Signs in with phone + password. */
 export async function signIn(phone: string, password: string): Promise<Result<Session>> {
   if (!isValidPhone(phone)) return { data: null, error: "Enter a phone like 03XX-XXXXXXX." };
   if (!password) return { data: null, error: "Please enter your password." };
-
-  const { data, error } = await insforge.auth.signInWithPassword({
-    email: phoneToEmail(phone),
-    password,
-  });
-
-  if (error || !data?.user) {
-    return { data: null, error: readableError(error, "Invalid phone or password.") };
-  }
-
-  const user: AuthUser = {
-    id: data.user.id,
-    email: data.user.email,
-    name: (data.user.profile as { name?: string } | undefined)?.name ?? null,
-  };
-
-  return { data: { user, customer: await getCustomer(user.id) }, error: null };
+  return post<Session>("/api/auth/signin", { phone, password });
 }
 
 export async function signOut(): Promise<Result<true>> {
-  const { error } = await insforge.auth.signOut();
-  if (error) return { data: null, error: readableError(error, "Could not sign out.") };
-  return { data: true, error: null };
+  const res = await post<{ ok: true }>("/api/auth/signout");
+  return { data: res.error ? null : true, error: res.error };
 }
 
 /**
  * The current session, or null when signed out.
  *
- * The SDK holds the access token in memory only, so on a fresh page load this
- * is what re-establishes the session from the httpOnly refresh cookie. There is
- * no `auth.getSession()` on the client — `getCurrentUser()` is the entry point.
+ * Resolved server-side from the auth cookies, so it survives a page reload
+ * without anything being kept in localStorage.
  */
 export async function getSession(): Promise<Session | null> {
-  const { data, error } = await insforge.auth.getCurrentUser();
-  if (error || !data?.user) return null;
-
-  const user: AuthUser = {
-    id: data.user.id,
-    email: data.user.email,
-    name: (data.user.profile as { name?: string } | undefined)?.name ?? null,
-  };
-  return { user, customer: await getCustomer(user.id) };
+  try {
+    const res = await fetch("/api/auth/session", { cache: "no-store" });
+    if (!res.ok) return null;
+    const json = (await res.json()) as Session & { user: AuthUser | null };
+    return json.user ? { user: json.user, customer: json.customer } : null;
+  } catch {
+    return null;
+  }
 }
 
 /**
- * Subscribes to sign-in / sign-out / token-refresh. Returns an unsubscribe
- * function — call it on unmount.
+ * Checks whether a phone number is already registered.
+ *
+ * Answered by the server with the admin key — RLS would otherwise show a
+ * signed-out visitor no rows at all and every number would look available.
  */
-export function onAuthStateChange(callback: (event: AuthEvent) => void): () => void {
-  return insforge.auth.onAuthStateChange((event) => callback(event as AuthEvent));
+export async function isPhoneAvailable(phone: string): Promise<boolean | null> {
+  if (!isValidPhone(phone)) return null;
+  try {
+    const res = await fetch(
+      `/api/auth/phone-available?phone=${encodeURIComponent(formatPhone(phone))}`,
+      { cache: "no-store" }
+    );
+    if (!res.ok) return null;
+    const json = (await res.json()) as { available?: boolean };
+    return typeof json.available === "boolean" ? json.available : null;
+  } catch {
+    return null;
+  }
 }

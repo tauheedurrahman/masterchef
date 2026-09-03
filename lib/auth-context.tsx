@@ -6,12 +6,14 @@
  * Mounted once in app/layout.tsx, alongside CartProvider, so every route shares
  * one session.
  *
- * Like the cart, the session is resolved only AFTER mount. The server has no
- * way to know who is signed in — the SDK keeps its access token in memory and
- * renews it from an httpOnly cookie — so the first client paint must match the
- * server's logged-out render. `loading` stays true until that first check
- * settles; consumers should render a neutral state rather than "signed out"
- * while it is true, otherwise the navbar flickers on every navigation.
+ * Like the cart, the session is resolved only AFTER mount, by asking
+ * /api/auth/session. The server render cannot know who is signed in, so the
+ * first client paint must match its logged-out output; `loading` stays true
+ * until that first check settles, and consumers should render a neutral state
+ * rather than "signed out" while it is.
+ *
+ * Every mutation flows through here, so there is no SDK event to subscribe to —
+ * the cookie-backed browser client does not expose one, and does not need to.
  */
 
 import {
@@ -27,7 +29,6 @@ import {
 
 import {
   getSession,
-  onAuthStateChange,
   signIn as authSignIn,
   signOut as authSignOut,
   signUp as authSignUp,
@@ -51,8 +52,10 @@ interface AuthContextValue {
   ) => Promise<Result<Session>>;
   signIn: (phone: string, password: string) => Promise<Result<Session>>;
   signOut: () => Promise<Result<true>>;
-  /** Re-reads the `customers` row — call after editing the profile. */
+  /** Re-reads the profile — call after editing it. */
   refresh: () => Promise<void>;
+  /** Applies an updated profile locally without a round trip. */
+  setCustomer: (customer: Customer) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -62,8 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Guards against a resolved promise writing state after unmount, and against
-  // a slow initial check clobbering a faster explicit sign-in.
+  // Guards against a resolved promise writing state after unmount.
   const alive = useRef(true);
 
   const apply = useCallback((session: Session | null) => {
@@ -78,27 +80,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     alive.current = true;
-
     (async () => {
       apply(await getSession());
       if (alive.current) setLoading(false);
     })();
-
-    // The SDK reports the event only, not the session, so re-read on signal.
-    // tokenRefreshed changes nothing the UI shows, so it is ignored.
-    const unsubscribe = onAuthStateChange((event) => {
-      if (event === "signedOut") {
-        apply(null);
-      } else if (event === "signedIn") {
-        void refresh();
-      }
-    });
-
     return () => {
       alive.current = false;
-      unsubscribe();
     };
-  }, [apply, refresh]);
+  }, [apply]);
 
   const signUp = useCallback<AuthContextValue["signUp"]>(
     async (phone, password, name, email) => {
@@ -120,8 +109,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback<AuthContextValue["signOut"]>(async () => {
     const result = await authSignOut();
-    // Clear locally even if the network call failed — the token is gone either
-    // way and leaving the UI "signed in" would be a lie.
+    // Clear locally even if the request failed — the cookies are gone either
+    // way, and leaving the UI "signed in" would be a lie.
     apply(null);
     return result;
   }, [apply]);
@@ -136,6 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signIn,
       signOut,
       refresh,
+      setCustomer: (c: Customer) => setCustomer(c),
     }),
     [user, customer, loading, signUp, signIn, signOut, refresh]
   );
