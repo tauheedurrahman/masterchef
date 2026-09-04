@@ -16,6 +16,9 @@
  * Filtering and sorting still happen here so callers stay identical.
  */
 
+import { connection } from "next/server";
+import { unstable_rethrow } from "next/navigation";
+
 import { insforgeAdmin } from "./insforge";
 import { type CategorySlug, type Deal, type MenuItem } from "./data";
 import { minPrice } from "./format";
@@ -138,8 +141,33 @@ function toDeal(row: RawDeal): DealRow {
   };
 }
 
+/**
+ * Opts the calling render out of the static prerender.
+ *
+ * The menu is edited from the admin dashboard, so a page baked at build time
+ * is wrong the moment someone adds an item: /menu and the homepage kept
+ * serving the build-time menu while /menu/[category] (already dynamic) showed
+ * the new item. Marking the read as request-time is what makes every page
+ * that displays menu data re-query on each request.
+ *
+ * generateStaticParams is the one caller that legitimately runs with no
+ * request behind it, and Next throws for connection() there. That is the only
+ * error swallowed below — unstable_rethrow first re-throws Next's own control
+ * flow (the prerender bail-out, notFound, redirect), which must never be
+ * caught or this whole mechanism silently stops working.
+ */
+async function requestTime(): Promise<void> {
+  try {
+    await connection();
+  } catch (err) {
+    unstable_rethrow(err);
+    // Build-time id enumeration: a plain read is correct and sufficient.
+  }
+}
+
 /** Every read funnels through here so a backend error is loud but not fatal. */
 async function fetchItems(): Promise<MenuItemRow[]> {
+  await requestTime();
   const { data, error } = await insforgeAdmin()
     .database.from("menu_items")
     .select()
@@ -153,6 +181,7 @@ async function fetchItems(): Promise<MenuItemRow[]> {
 }
 
 async function fetchDeals(): Promise<DealRow[]> {
+  await requestTime();
   const { data, error } = await insforgeAdmin()
     .database.from("deals")
     .select()
@@ -223,6 +252,7 @@ export async function getItems(opts: ItemQuery = {}): Promise<MenuItemRow[]> {
 }
 
 export async function getItemById(id: string): Promise<MenuItemRow | null> {
+  await requestTime();
   const { data, error } = await insforgeAdmin()
     .database.from("menu_items")
     .select()
