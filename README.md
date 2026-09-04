@@ -6,7 +6,7 @@ A production restaurant ordering platform for a Peshawar fast-food & continental
 
 🔗 Live Site
 
-View the Live Site →
+View the Live Site → https://masterchef.insforge.site/
 
 
 
@@ -1010,4 +1010,4 @@ For the full import workflow, see incoming/README.md.
 
 Peshawar · Hot and Delicious — Full of Flavors
 
-Visit the live site →
+Visit the live site → https://masterchef.insforge.site/
