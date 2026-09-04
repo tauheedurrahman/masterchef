@@ -1,5 +1,5 @@
 import { insforgeAdmin } from "@/lib/insforge";
-import { validateItem, type ItemInput, normaliseImages } from "../route";
+import { validateItem, checkCategory, type ItemInput, normaliseImages } from "../route";
 
 /** PATCH /api/admin/items/[id] — partial update (also used by the toggles). */
 export async function PATCH(
@@ -17,6 +17,13 @@ export async function PATCH(
 
   const problem = validateItem(body, { partial: true });
   if (problem) return Response.json({ error: problem }, { status: 400 });
+
+  // Only when the caller is actually changing the category — the availability
+  // toggles PATCH a single field and must not pay for a lookup.
+  if (body.category !== undefined) {
+    const badCategory = await checkCategory(body.category);
+    if (badCategory) return Response.json({ error: badCategory }, { status: 400 });
+  }
 
   const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (body.name !== undefined) patch.name = body.name.trim();

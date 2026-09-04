@@ -3,10 +3,16 @@
 import { useCallback, useEffect, useState } from "react";
 import { money } from "@/lib/format";
 
-const CATEGORIES = [
-  "burgers", "shawarma", "paratha-roll", "fries",
-  "appetizers", "continental", "pizza", "platters",
-];
+interface Category {
+  id: string;
+  display_name: string;
+  icon: string | null;
+  sort_order: number;
+  itemCount: number;
+}
+
+/** Blank category form. The slug is only editable when creating. */
+const blankCategory = () => ({ id: "", display_name: "", icon: "" });
 
 interface Variant { label: string; price: number }
 
@@ -45,6 +51,18 @@ export default function AdminMenuPage() {
   const [isNewItem, setIsNewItem] = useState(false);
   const [busy, setBusy] = useState(false);
 
+  // Categories are their own small CRUD above the items table. They come from
+  // the database rather than a constant, so the item form's dropdown and this
+  // list can never disagree.
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [fallbackId, setFallbackId] = useState("uncategorized");
+  const [catForm, setCatForm] = useState<{ id: string; display_name: string; icon: string } | null>(null);
+  const [isNewCat, setIsNewCat] = useState(false);
+  const [catError, setCatError] = useState<string | null>(null);
+  const [catBusy, setCatBusy] = useState(false);
+  // Deleting asks twice: 1 = "this has N items", 2 = "are you sure".
+  const [deleting, setDeleting] = useState<{ cat: Category; step: 1 | 2 } | null>(null);
+
   const load = useCallback(async () => {
     try {
       const res = await fetch("/api/admin/items", { cache: "no-store" });
@@ -63,7 +81,19 @@ export default function AdminMenuPage() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  const loadCategories = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/categories", { cache: "no-store" });
+      if (!res.ok) throw new Error("categories");
+      const json = await res.json();
+      setCategories(json.categories as Category[]);
+      setFallbackId(json.fallback ?? "uncategorized");
+    } catch {
+      setError("Could not load categories.");
+    }
+  }, []);
+
+  useEffect(() => { load(); loadCategories(); }, [load, loadCategories]);
 
   async function patch(id: string, body: Partial<Item>) {
     const res = await fetch(`/api/admin/items/${id}`, {
@@ -174,6 +204,66 @@ export default function AdminMenuPage() {
     }
   }
 
+  async function saveCategory(e: React.FormEvent) {
+    e.preventDefault();
+    if (!catForm || catBusy) return;
+    setCatBusy(true);
+    setCatError(null);
+    try {
+      const res = await fetch(
+        isNewCat ? "/api/admin/categories" : `/api/admin/categories/${catForm.id}`,
+        {
+          method: isNewCat ? "POST" : "PATCH",
+          headers: { "Content-Type": "application/json" },
+          // On edit the slug is deliberately not sent: it is immutable server
+          // side, and sending it would only ever trip that check.
+          body: JSON.stringify(
+            isNewCat
+              ? { id: catForm.id, display_name: catForm.display_name, icon: catForm.icon }
+              : { display_name: catForm.display_name, icon: catForm.icon }
+          ),
+        }
+      );
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error ?? "Could not save that category.");
+      setNotice(isNewCat ? "Category created." : "Category saved.");
+      setCatForm(null);
+      loadCategories();
+    } catch (err) {
+      setCatError(err instanceof Error ? err.message : "Could not save that category.");
+    } finally {
+      setCatBusy(false);
+    }
+  }
+
+  async function confirmDelete() {
+    if (!deleting || catBusy) return;
+    setCatBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(
+        `/api/admin/categories/${deleting.cat.id}?confirm=1`,
+        { method: "DELETE" }
+      );
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error ?? "Could not delete that category.");
+      setNotice(
+        json.moved > 0
+          ? `Deleted ${deleting.cat.display_name}. ${json.moved} item${json.moved === 1 ? "" : "s"} moved to Uncategorized.`
+          : `Deleted ${deleting.cat.display_name}.`
+      );
+      setDeleting(null);
+      // Both lists move: the items now carry a different category.
+      loadCategories();
+      load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not delete that category.");
+      setDeleting(null);
+    } finally {
+      setCatBusy(false);
+    }
+  }
+
   const priceRange = (v: Variant[]) => {
     if (!v.length) return "—";
     const prices = v.map((x) => Number(x.price));
@@ -192,7 +282,12 @@ export default function AdminMenuPage() {
         </div>
         <button
           type="button" className="adm__btn"
-          onClick={() => { setEditing(blank()); setIsNewItem(true); setError(null); }}
+          onClick={() => {
+            const first = categories.find((c) => c.id !== fallbackId) ?? categories[0];
+            setEditing({ ...blank(), category: first?.id ?? "burgers" });
+            setIsNewItem(true);
+            setError(null);
+          }}
         >
           Add new item
         </button>
@@ -200,6 +295,85 @@ export default function AdminMenuPage() {
 
       {error && <div className="adm__error">{error}</div>}
       {notice && <div className="adm__ok">{notice}</div>}
+
+      {/* ---------------------------- categories --------------------------- */}
+      <section style={{ marginBottom: 26 }}>
+        <div
+          className="adm__head"
+          style={{ marginBottom: 12, paddingBottom: 0, border: 0 }}
+        >
+          <div>
+            <h2 style={{ fontSize: 17, margin: 0 }}>Categories</h2>
+            <p className="adm__sub">{categories.length} categories</p>
+          </div>
+          <button
+            type="button"
+            className="adm__btn adm__btn--ghost"
+            onClick={() => {
+              setCatForm(blankCategory());
+              setIsNewCat(true);
+              setCatError(null);
+            }}
+          >
+            Create new category
+          </button>
+        </div>
+
+        <div className="adm__grid adm__cats">
+          {categories.map((c) => (
+            <div
+              className="adm__card adm__cat"
+              key={c.id}
+              data-fallback={c.id === fallbackId}
+            >
+              <div className="adm__cat__top">
+                {c.icon && (
+                  <span className="adm__cat__icon" aria-hidden="true">
+                    {c.icon}
+                  </span>
+                )}
+                <div>
+                  <div className="adm__cat__name">{c.display_name}</div>
+                  <div className="adm__cat__slug">{c.id}</div>
+                </div>
+              </div>
+
+              <div className="adm__cat__count">
+                {c.itemCount} item{c.itemCount === 1 ? "" : "s"}
+              </div>
+
+              <div className="adm__cat__acts">
+                <button
+                  type="button"
+                  className="adm__btn adm__btn--ghost adm__btn--sm"
+                  onClick={() => {
+                    setCatForm({
+                      id: c.id,
+                      display_name: c.display_name,
+                      icon: c.icon ?? "",
+                    });
+                    setIsNewCat(false);
+                    setCatError(null);
+                  }}
+                >
+                  Edit
+                </button>
+                {/* Uncategorized is where deleted categories' items land, so
+                    it has no delete of its own. */}
+                {c.id !== fallbackId && (
+                  <button
+                    type="button"
+                    className="adm__btn adm__btn--danger adm__btn--sm"
+                    onClick={() => setDeleting({ cat: c, step: 1 })}
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
 
       <div className="adm__card">
         <div className="adm__tablewrap">
@@ -246,7 +420,8 @@ export default function AdminMenuPage() {
                     <div style={{ color: "#6f6459", fontSize: 12 }}>{item.id}</div>
                   </td>
                   <td>
-                    {item.category}
+                    {categories.find((c) => c.id === item.category)?.display_name ??
+                      item.category}
                     <div style={{ color: "#6f6459", fontSize: 12 }}>{item.subcategory}</div>
                   </td>
                   <td className="adm__num">{priceRange(item.variants)}</td>
@@ -286,6 +461,145 @@ export default function AdminMenuPage() {
         </div>
       </div>
 
+      {/* ------------------------ category create/edit ---------------------- */}
+      {catForm && (
+        <div className="adm__backdrop" onClick={() => !catBusy && setCatForm(null)}>
+          <div className="adm__modal" onClick={(e) => e.stopPropagation()}>
+            <h2>{isNewCat ? "New category" : `Edit ${catForm.display_name}`}</h2>
+            <form onSubmit={saveCategory}>
+              <div className="adm__field">
+                <label htmlFor="c-slug">Category slug</label>
+                <input
+                  id="c-slug"
+                  type="text"
+                  value={catForm.id}
+                  className={isNewCat ? undefined : "adm__readonly"}
+                  readOnly={!isNewCat}
+                  placeholder="e.g. cold-drinks"
+                  onChange={(e) =>
+                    setCatForm({ ...catForm, id: e.target.value.toLowerCase() })
+                  }
+                />
+                <p className="adm__hint">
+                  {isNewCat
+                    ? "Lowercase, hyphenated, no spaces. This becomes the /menu/<slug> URL. Leave blank to derive it from the display name."
+                    : "The slug is the menu URL and cannot be changed — it would break existing links."}
+                </p>
+              </div>
+
+              <div className="adm__field">
+                <label htmlFor="c-name">Display name</label>
+                <input
+                  id="c-name"
+                  type="text"
+                  value={catForm.display_name}
+                  placeholder="e.g. Cold Drinks"
+                  onChange={(e) =>
+                    setCatForm({ ...catForm, display_name: e.target.value })
+                  }
+                  required
+                />
+                <p className="adm__hint">What customers see.</p>
+              </div>
+
+              <div className="adm__field">
+                <label htmlFor="c-icon">Icon (optional)</label>
+                <input
+                  id="c-icon"
+                  type="text"
+                  value={catForm.icon}
+                  placeholder="🥤"
+                  maxLength={8}
+                  onChange={(e) => setCatForm({ ...catForm, icon: e.target.value })}
+                />
+                <p className="adm__hint">A single emoji.</p>
+              </div>
+
+              {catError && <div className="adm__error">{catError}</div>}
+
+              <div className="adm__row">
+                <button type="submit" className="adm__btn" disabled={catBusy}>
+                  {catBusy ? "Saving…" : isNewCat ? "Create category" : "Save changes"}
+                </button>
+                <button
+                  type="button"
+                  className="adm__btn adm__btn--ghost"
+                  onClick={() => setCatForm(null)}
+                  disabled={catBusy}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --------------------------- delete category ------------------------ */}
+      {deleting && (
+        <div className="adm__backdrop" onClick={() => !catBusy && setDeleting(null)}>
+          <div className="adm__modal" onClick={(e) => e.stopPropagation()}>
+            <h2>Delete {deleting.cat.display_name}?</h2>
+
+            {deleting.step === 1 ? (
+              <>
+                <div className="adm__cat__warn">
+                  <b>
+                    This category has {deleting.cat.itemCount} item
+                    {deleting.cat.itemCount === 1 ? "" : "s"}.
+                  </b>
+                  {deleting.cat.itemCount > 0
+                    ? "Those items will be moved to Uncategorized, not deleted. You can re-file them afterwards."
+                    : "It is empty, so nothing else changes."}
+                </div>
+                <div className="adm__row" style={{ marginTop: 16 }}>
+                  <button
+                    type="button"
+                    className="adm__btn adm__btn--danger"
+                    onClick={() => setDeleting({ ...deleting, step: 2 })}
+                  >
+                    Delete it
+                  </button>
+                  <button
+                    type="button"
+                    className="adm__btn adm__btn--ghost"
+                    onClick={() => setDeleting(null)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="adm__cat__warn">
+                  <b>Are you sure?</b>
+                  Deleting &ldquo;{deleting.cat.display_name}&rdquo; cannot be undone. The
+                  category will disappear from the menu.
+                </div>
+                <div className="adm__row" style={{ marginTop: 16 }}>
+                  <button
+                    type="button"
+                    className="adm__btn adm__btn--danger"
+                    onClick={confirmDelete}
+                    disabled={catBusy}
+                  >
+                    {catBusy ? "Deleting…" : "Yes, delete permanently"}
+                  </button>
+                  <button
+                    type="button"
+                    className="adm__btn adm__btn--ghost"
+                    onClick={() => setDeleting(null)}
+                    disabled={catBusy}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ------------------------------ editor ------------------------------ */}
       {editing && (
         <div className="adm__backdrop" onClick={() => !busy && setEditing(null)}>
@@ -309,9 +623,15 @@ export default function AdminMenuPage() {
               <div className="adm__row">
                 <div className="adm__field" style={{ flex: 1, minWidth: 160 }}>
                   <label htmlFor="f-cat">Category</label>
+                  {/* Populated from the categories table, so a category
+                      created above is immediately assignable here. */}
                   <select id="f-cat" value={editing.category}
                     onChange={(e) => setEditing({ ...editing, category: e.target.value })}>
-                    {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.icon ? `${c.icon} ` : ""}{c.display_name}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div className="adm__field" style={{ flex: 1, minWidth: 160 }}>

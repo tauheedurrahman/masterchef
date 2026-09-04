@@ -182,6 +182,21 @@ export const ADMIN_CSS = `
   .adm__main { padding: 18px 16px 50px; }
 }
 
+/* ---------------------------------------------------- categories */
+.adm__cats { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); margin-bottom: 8px; }
+.adm__cat { display: flex; flex-direction: column; gap: 8px; padding: 14px; }
+.adm__cat[data-fallback="true"] { border-style: dashed; background: #faf7f2; }
+.adm__cat__top { display: flex; align-items: center; gap: 9px; }
+.adm__cat__icon { font-size: 20px; line-height: 1; }
+.adm__cat__name { font-weight: 600; font-size: 14.5px; }
+.adm__cat__slug { color: var(--muted); font-size: 11.5px; font-family: ui-monospace, monospace; }
+.adm__cat__count { color: var(--muted); font-size: 12.5px; }
+.adm__cat__acts { display: flex; gap: 7px; margin-top: auto; padding-top: 8px; border-top: 1px solid var(--line); }
+.adm__cat__warn { background: #fef3c7; border: 1px solid #fcd34d; border-radius: 7px; padding: 9px 11px; font-size: 12.5px; color: #78350f; }
+.adm__cat__warn b { display: block; margin-bottom: 3px; }
+.adm__hint { color: var(--muted); font-size: 12px; margin-top: 5px; }
+.adm__readonly { background: #f4f1ec; color: var(--muted); cursor: not-allowed; }
+
 /* ---------------------------------------------------------- print */
 .adm__ticket { display: none; }
 @media print {

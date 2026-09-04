@@ -1,9 +1,34 @@
 import { insforgeAdmin } from "@/lib/insforge";
 
-const CATEGORIES = [
-  "burgers", "shawarma", "paratha-roll", "fries",
-  "appetizers", "continental", "pizza", "platters",
-];
+/**
+ * Valid categories come from the categories table, not a constant.
+ *
+ * They used to be hard-coded here, which meant a category created in the
+ * dashboard could not actually be assigned to an item — this check rejected it
+ * before the row ever reached Postgres. The database is the authority now:
+ * menu_items.category is a foreign key onto categories(id).
+ */
+async function knownCategories(): Promise<string[]> {
+  const { data, error } = await insforgeAdmin().database.from("categories").select("id");
+  if (error) {
+    console.error("[admin] category list read failed:", error.message ?? error);
+    return [];
+  }
+  return ((data ?? []) as { id: string }[]).map((c) => c.id);
+}
+
+/** Returns an error string when the category is unknown, else null. */
+async function checkCategory(category: string | undefined): Promise<string | null> {
+  if (!category) return "Category is required.";
+  const known = await knownCategories();
+  // An empty list means the read failed; the foreign key still guards the
+  // insert, so do not block a legitimate save on a transient outage.
+  if (known.length === 0) return null;
+  if (!known.includes(category)) {
+    return `Category must be one of: ${known.join(", ")}`;
+  }
+  return null;
+}
 
 export type ItemInput = {
   id?: string;
@@ -68,13 +93,11 @@ async function uniqueId(
 }
 
 /** Shared shape check for create and update. Returns an error string or null. */
+export { checkCategory };
+
 export function validateItem(body: ItemInput, { partial = false } = {}): string | null {
   if (!partial || body.name !== undefined) {
     if (!body.name?.trim()) return "Name is required.";
-  }
-  if (!partial || body.category !== undefined) {
-    if (!body.category || !CATEGORIES.includes(body.category))
-      return `Category must be one of: ${CATEGORIES.join(", ")}`;
   }
   if (!partial || body.subcategory !== undefined) {
     if (!body.subcategory?.trim()) return "Subcategory is required.";
@@ -116,6 +139,9 @@ export async function POST(request: Request) {
 
   const problem = validateItem(body);
   if (problem) return Response.json({ error: problem }, { status: 400 });
+
+  const badCategory = await checkCategory(body.category);
+  if (badCategory) return Response.json({ error: badCategory }, { status: 400 });
 
   const db = insforgeAdmin();
 
