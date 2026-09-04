@@ -43,6 +43,7 @@ export async function PATCH(
   const patch: Record<string, unknown> = {};
   if (body.display_name !== undefined) patch.display_name = body.display_name.trim();
   if (body.icon !== undefined) patch.icon = body.icon?.trim() || null;
+  if (body.image !== undefined) patch.image = body.image?.trim() || null;
   if (body.sort_order !== undefined) patch.sort_order = Number(body.sort_order);
 
   if (Object.keys(patch).length === 0) {

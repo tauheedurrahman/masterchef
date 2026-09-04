@@ -1,17 +1,27 @@
 import Link from "next/link";
 import SafeImage from "./SafeImage";
-import { CATEGORIES } from "@/lib/data";
+import { getCategories } from "@/lib/api";
+import { PLACEHOLDER_IMAGE } from "@/lib/data";
 
-/** Horizontally scrollable circular category tiles. */
-export default function CategoryStrip() {
+/**
+ * Horizontally scrollable circular category tiles.
+ *
+ * The list, its order and the tile photos all come from the categories table,
+ * so a category added or re-pictured in the admin dashboard shows up here
+ * without a code change. A server component, so the read happens on the
+ * server and no admin client reaches the browser.
+ */
+export default async function CategoryStrip() {
+  const categories = await getCategories();
+
   return (
     <div className="scroll-x no-bar">
       <div className="cat-strip">
-        {CATEGORIES.map((c) => (
+        {categories.map((c) => (
           <Link key={c.slug} href={`/menu/${c.slug}`} className="cat-tile">
             <span className="cat-tile__img">
               <SafeImage
-                src={c.image}
+                src={c.image || PLACEHOLDER_IMAGE}
                 alt=""
                 fill
                 sizes="120px"

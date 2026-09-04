@@ -12,6 +12,8 @@ export type CategoryInput = {
   id?: string;
   display_name?: string;
   icon?: string | null;
+  /** Tile photo for the homepage "What are you craving?" strip. */
+  image?: string | null;
   sort_order?: number;
 };
 
@@ -50,6 +52,15 @@ export function validateCategory(
   // byte one — enough for a flag or a compound emoji, not a sentence.
   if (body.icon != null && body.icon.trim().length > 8) {
     return "Use a single emoji or a very short icon.";
+  }
+  if (body.image != null && body.image.trim()) {
+    const url = body.image.trim();
+    if (url.length > 600) return "That image URL is too long.";
+    // Uploads come back as absolute URLs; a local /images/... path is also
+    // fine. Anything else is a typo, not a picture.
+    if (!/^https?:\/\//i.test(url) && !url.startsWith("/")) {
+      return "The image must be an uploaded file or a URL.";
+    }
   }
   return null;
 }
@@ -134,6 +145,7 @@ export async function POST(request: Request) {
         id,
         display_name: body.display_name!.trim(),
         icon: body.icon?.trim() || null,
+        image: body.image?.trim() || null,
         sort_order: body.sort_order ?? nextOrder,
       },
     ])

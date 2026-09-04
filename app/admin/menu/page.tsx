@@ -7,12 +7,13 @@ interface Category {
   id: string;
   display_name: string;
   icon: string | null;
+  image: string | null;
   sort_order: number;
   itemCount: number;
 }
 
 /** Blank category form. The slug is only editable when creating. */
-const blankCategory = () => ({ id: "", display_name: "" });
+const blankCategory = () => ({ id: "", display_name: "", image: "" });
 
 interface Variant { label: string; price: number }
 
@@ -56,7 +57,11 @@ export default function AdminMenuPage() {
   // list can never disagree.
   const [categories, setCategories] = useState<Category[]>([]);
   const [fallbackId, setFallbackId] = useState("uncategorized");
-  const [catForm, setCatForm] = useState<{ id: string; display_name: string } | null>(null);
+  const [catForm, setCatForm] = useState<{
+    id: string;
+    display_name: string;
+    image: string;
+  } | null>(null);
   const [isNewCat, setIsNewCat] = useState(false);
   const [catError, setCatError] = useState<string | null>(null);
   const [catBusy, setCatBusy] = useState(false);
@@ -204,6 +209,26 @@ export default function AdminMenuPage() {
     }
   }
 
+  /** Uploads a tile picture and puts its URL straight into the form. */
+  async function uploadCategoryImage(file: File) {
+    if (!catForm) return;
+    setCatBusy(true);
+    setCatError(null);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("name", `category-${catForm.id || catForm.display_name || "new"}`);
+      const res = await fetch("/api/admin/upload", { method: "POST", body: form });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error ?? "Upload failed.");
+      setCatForm((f) => (f ? { ...f, image: json.url } : f));
+    } catch (err) {
+      setCatError(err instanceof Error ? err.message : "Upload failed.");
+    } finally {
+      setCatBusy(false);
+    }
+  }
+
   async function saveCategory(e: React.FormEvent) {
     e.preventDefault();
     if (!catForm || catBusy) return;
@@ -219,8 +244,12 @@ export default function AdminMenuPage() {
           // side, and sending it would only ever trip that check.
           body: JSON.stringify(
             isNewCat
-              ? { id: catForm.id, display_name: catForm.display_name }
-              : { display_name: catForm.display_name }
+              ? {
+                  id: catForm.id,
+                  display_name: catForm.display_name,
+                  image: catForm.image,
+                }
+              : { display_name: catForm.display_name, image: catForm.image }
           ),
         }
       );
@@ -327,6 +356,11 @@ export default function AdminMenuPage() {
               data-fallback={c.id === fallbackId}
             >
               <div className="adm__cat__top">
+                {c.image ? (
+                  <img src={c.image} alt="" className="adm__cat__pic" />
+                ) : (
+                  <span className="adm__cat__pic adm__cat__pic--none" aria-hidden="true" />
+                )}
                 <div>
                   <div className="adm__cat__name">{c.display_name}</div>
                   <div className="adm__cat__slug">{c.id}</div>
@@ -342,7 +376,11 @@ export default function AdminMenuPage() {
                   type="button"
                   className="adm__btn adm__btn--ghost adm__btn--sm"
                   onClick={() => {
-                    setCatForm({ id: c.id, display_name: c.display_name });
+                    setCatForm({
+                      id: c.id,
+                      display_name: c.display_name,
+                      image: c.image ?? "",
+                    });
                     setIsNewCat(false);
                     setCatError(null);
                   }}
@@ -491,6 +529,35 @@ export default function AdminMenuPage() {
                   required
                 />
                 <p className="adm__hint">What customers see.</p>
+              </div>
+
+              <div className="adm__field">
+                <label htmlFor="c-image">Picture</label>
+                <div className="adm__row" style={{ alignItems: "center" }}>
+                  {catForm.image && (
+                    <img src={catForm.image} alt="" className="adm__cat__preview" />
+                  )}
+                  <input
+                    id="c-image"
+                    type="text"
+                    value={catForm.image}
+                    placeholder="Image URL, or upload one"
+                    style={{ flex: 1, minWidth: 180 }}
+                    onChange={(e) => setCatForm({ ...catForm, image: e.target.value })}
+                  />
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    style={{ flex: "0 0 auto" }}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) uploadCategoryImage(file);
+                    }}
+                  />
+                </div>
+                <p className="adm__hint">
+                  Shown on the home page under &ldquo;What are you craving?&rdquo;.
+                </p>
               </div>
 
               {catError && <div className="adm__error">{catError}</div>}

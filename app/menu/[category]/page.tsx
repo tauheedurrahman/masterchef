@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import MenuItemCard from "@/components/MenuItemCard";
 import SortSelect from "@/components/SortSelect";
 import Reveal from "@/components/Reveal";
-import { getItems } from "@/lib/api";
+import { getCategoryBySlug, getItems } from "@/lib/api";
 import {
   CATEGORIES,
   categoryInfo,
@@ -25,11 +25,18 @@ export async function generateMetadata({
   params: Promise<Params>;
 }): Promise<Metadata> {
   const { category } = await params;
-  const info = categoryInfo(category);
+  // Same fallback as the page itself: a dashboard-created category has no
+  // entry in lib/data.ts, and titling it "Category not found" while the page
+  // renders fine would be worse than having no curated tagline.
+  const curated = categoryInfo(category);
+  const info = curated ?? (await getCategoryBySlug(category));
   if (!info) return { title: "Category not found" };
+
+  const tagline =
+    "tagline" in info ? info.tagline : `Everything under ${info.name.toLowerCase()}`;
   return {
     title: info.name,
-    description: `${info.name} at Master Chef Peshawar — ${info.tagline.toLowerCase()}.`,
+    description: `${info.name} at Master Chef Peshawar — ${tagline.toLowerCase()}.`,
   };
 }
 
@@ -43,8 +50,20 @@ export default async function CategoryPage({
   const { category } = await params;
   const { sub, sort = "featured" } = await searchParams;
 
-  const info = categoryInfo(category);
-  if (!info) notFound();
+  // lib/data.ts carries the curated copy (tagline, hero image) for the original
+  // sections. A category added from the dashboard has no entry there, so fall
+  // back to its database row — otherwise the homepage strip would link to a
+  // 404 the moment someone creates one.
+  const curated = categoryInfo(category);
+  const fromDb = curated ? null : await getCategoryBySlug(category);
+  if (!curated && !fromDb) notFound();
+
+  const info = curated ?? {
+    slug: fromDb!.slug,
+    name: fromDb!.name,
+    tagline: `Everything under ${fromDb!.name.toLowerCase()}`,
+    image: fromDb!.image ?? "",
+  };
 
   const slug = info.slug as CategorySlug;
 

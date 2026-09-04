@@ -298,6 +298,65 @@ export async function getCategoriesInUse(): Promise<string[]> {
 }
 
 /* ------------------------------------------------------------------ *
+ * Categories
+ * ------------------------------------------------------------------ */
+
+/**
+ * A category as the storefront needs it: the slug it links to, the name and
+ * the tile photo the homepage strip renders.
+ */
+export interface CategoryRow {
+  slug: string;
+  name: string;
+  image: string | null;
+  sortOrder: number;
+}
+
+/** Internal bucket for items whose category was deleted. Never shown. */
+const HIDDEN_CATEGORY = "uncategorized";
+
+/**
+ * Categories in display order, straight from the database.
+ *
+ * The homepage strip used to render lib/data.ts's CATEGORIES array, so a tile
+ * could only be changed in code. Reading here means the admin dashboard owns
+ * the list, its order and its pictures.
+ */
+export async function getCategories(): Promise<CategoryRow[]> {
+  await requestTime();
+
+  const { data, error } = await insforgeAdmin()
+    .database.from("categories")
+    .select("id, display_name, image, sort_order")
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    console.error("[api] categories read failed:", error.message ?? error);
+    return [];
+  }
+
+  return ((data ?? []) as {
+    id: string;
+    display_name: string;
+    image: string | null;
+    sort_order: number | null;
+  }[])
+    .filter((c) => c.id !== HIDDEN_CATEGORY)
+    .map((c) => ({
+      slug: c.id,
+      name: c.display_name,
+      image: c.image,
+      sortOrder: c.sort_order ?? 0,
+    }));
+}
+
+/** One category, or null when the slug is not a real section. */
+export async function getCategoryBySlug(slug: string): Promise<CategoryRow | null> {
+  const all = await getCategories();
+  return all.find((c) => c.slug === slug) ?? null;
+}
+
+/* ------------------------------------------------------------------ *
  * Deals
  * ------------------------------------------------------------------ */
 

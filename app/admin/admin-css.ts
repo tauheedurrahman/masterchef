@@ -187,6 +187,9 @@ export const ADMIN_CSS = `
 .adm__cat { display: flex; flex-direction: column; gap: 8px; padding: 14px; }
 .adm__cat[data-fallback="true"] { border-style: dashed; background: #faf7f2; }
 .adm__cat__top { display: flex; align-items: center; gap: 9px; }
+.adm__cat__pic { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; flex: 0 0 40px; background: #efe9e1; }
+.adm__cat__pic--none { display: block; border: 1px dashed var(--line); background: #f7f4ef; }
+.adm__cat__preview { width: 46px; height: 46px; border-radius: 8px; object-fit: cover; flex: 0 0 46px; background: #efe9e1; }
 .adm__cat__name { font-weight: 600; font-size: 14.5px; }
 .adm__cat__slug { color: var(--muted); font-size: 11.5px; font-family: ui-monospace, monospace; }
 .adm__cat__count { color: var(--muted); font-size: 12.5px; }
