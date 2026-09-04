@@ -1,4 +1,4 @@
-🍔 MASTER CHEF
+MASTER CHEF
 
 Hot and Delicious — Full of Flavors
 
@@ -1006,7 +1006,7 @@ Import items from incoming/menu.csv
 
 For the full import workflow, see incoming/README.md.
 
-🍔 Master Chef
+Master Chef
 
 Peshawar · Hot and Delicious — Full of Flavors
 
