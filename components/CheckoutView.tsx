@@ -26,7 +26,6 @@ interface SavedAddress {
   street: string;
   area: string | null;
   city: string | null;
-  landmark: string | null;
   is_default: boolean;
 }
 
@@ -55,11 +54,6 @@ export default function CheckoutView() {
     address: "",
     area: "",
     city: SITE.city as string,
-    landmark: "",
-    timeNote: "",
-    cardNumber: "",
-    cardExpiry: "",
-    cardCvc: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -109,7 +103,6 @@ export default function CheckoutView() {
           address: f.address || preset.street,
           area: f.area || preset.area || "",
           city: preset.city || f.city,
-          landmark: f.landmark || preset.landmark || "",
         }));
       } catch {
         /* typing the address by hand still works */
@@ -135,7 +128,6 @@ export default function CheckoutView() {
       address: a.street,
       area: a.area || "",
       city: a.city || SITE.city,
-      landmark: a.landmark || "",
     }));
   }
 
@@ -276,7 +268,6 @@ export default function CheckoutView() {
                   street: form.address.trim(),
                   area: form.area.trim(),
                   city: form.city.trim(),
-                  landmark: form.landmark.trim(),
                 }
               : null,
           items: lines.map((l) => ({
@@ -289,7 +280,6 @@ export default function CheckoutView() {
             quantity: l.qty,
           })),
           paymentMethod: payment,
-          specialInstructions: form.timeNote.trim(),
           // The code, not the discount: the server prices the offer itself.
           offerCode: applied?.code ?? null,
         }),
@@ -315,7 +305,6 @@ export default function CheckoutView() {
             street: form.address.trim(),
             area: form.area.trim(),
             city: form.city.trim(),
-            landmark: form.landmark.trim(),
           }),
         }).catch(() => {});
       }
@@ -614,27 +603,6 @@ export default function CheckoutView() {
                   {errors.city && <span className="error">{errors.city}</span>}
                 </div>
 
-                <div className="form-field">
-                  <label htmlFor="landmark">Landmark (optional)</label>
-                  <input
-                    id="landmark"
-                    className="input"
-                    value={form.landmark}
-                    onChange={set("landmark")}
-                    placeholder="Near Jan Bakers"
-                  />
-                </div>
-
-                <div className="form-field">
-                  <label htmlFor="timeNote">Delivery time note (optional)</label>
-                  <input
-                    id="timeNote"
-                    className="input"
-                    value={form.timeNote}
-                    onChange={set("timeNote")}
-                    placeholder="Ring the bell, deliver after 9pm…"
-                  />
-                </div>
               </div>
 
               {isAuthenticated && (
@@ -690,45 +658,10 @@ export default function CheckoutView() {
             </div>
 
             {payment === "card" && (
-              <>
-                <div className="form-grid" style={{ marginTop: 18 }}>
-                  <div className="form-field form-field--full">
-                    <label htmlFor="cardNumber">Card number</label>
-                    <input
-                      id="cardNumber"
-                      className="input"
-                      inputMode="numeric"
-                      value={form.cardNumber}
-                      onChange={set("cardNumber")}
-                      placeholder="4242 4242 4242 4242"
-                    />
-                  </div>
-                  <div className="form-field">
-                    <label htmlFor="cardExpiry">Expiry</label>
-                    <input
-                      id="cardExpiry"
-                      className="input"
-                      value={form.cardExpiry}
-                      onChange={set("cardExpiry")}
-                      placeholder="MM / YY"
-                    />
-                  </div>
-                  <div className="form-field">
-                    <label htmlFor="cardCvc">CVC</label>
-                    <input
-                      id="cardCvc"
-                      className="input"
-                      value={form.cardCvc}
-                      onChange={set("cardCvc")}
-                      placeholder="123"
-                    />
-                  </div>
-                </div>
-                <p className="demo-note">
-                  Demo only — these fields are not validated, not stored and not
-                  processed. Do not enter real card details.
-                </p>
-              </>
+              <p className="demo-note">
+                Demo only — card payments are not processed. Please pay cash on{" "}
+                {orderType === "delivery" ? "delivery" : "pickup"}.
+              </p>
             )}
           </section>
         </div>

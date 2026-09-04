@@ -50,11 +50,13 @@ interface IncomingOrder {
     street: string;
     area: string;
     city: string;
-    landmark: string;
+    // Both dropped from the checkout form; still accepted so an older client
+    // (or the admin dashboard's own posts) keeps working.
+    landmark?: string;
   } | null;
   items: IncomingItem[];
   paymentMethod: string;
-  specialInstructions: string;
+  specialInstructions?: string;
   offerCode?: string | null;
 }
 

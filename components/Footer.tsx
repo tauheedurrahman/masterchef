@@ -1,11 +1,11 @@
 import Link from "next/link";
+import FooterVisitInfo from "./FooterVisitInfo";
 import { CATEGORIES } from "@/lib/data";
 import { SITE, WHATSAPP_LINK } from "@/lib/site";
 import {
   FacebookIcon,
   InstagramIcon,
   PhoneIcon,
-  PinIcon,
   TikTokIcon,
 } from "./Icons";
 
@@ -124,32 +124,7 @@ export default function Footer() {
 
         <hr className="hairline" />
 
-        <div className="info-block" style={{ borderBottom: 0, paddingBottom: 8 }}>
-          <span className="info-block__icon">
-            <PinIcon size={18} />
-          </span>
-          <div>
-            <h3>Visit us</h3>
-            <p>{SITE.address}</p>
-          </div>
-        </div>
-
-        <div className="info-block" style={{ borderBottom: 0, paddingTop: 0 }}>
-          <span className="info-block__icon">
-            <PhoneIcon size={18} />
-          </span>
-          <div>
-            <h3>Call to order</h3>
-            <p>
-              {SITE.phones.map((p, i) => (
-                <span key={p}>
-                  <a href={`tel:${SITE.phoneTel[i]}`}>{p}</a>
-                  {i === 0 ? "  ·  " : ""}
-                </span>
-              ))}
-            </p>
-          </div>
-        </div>
+        <FooterVisitInfo />
 
         <div className="footer__bottom">
           <span>

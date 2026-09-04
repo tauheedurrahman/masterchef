@@ -3,38 +3,59 @@
 import { useState } from "react";
 import { ArrowRightIcon, CheckIcon } from "./Icons";
 
-/** UI-only enquiry form. Nothing is transmitted. */
+/**
+ * Enquiry form for /contact.
+ *
+ * Real: it POSTs to /api/contact, which stores the message so the owner can
+ * call back. The form stays on screen and empties itself on success, because
+ * people send a second message far more often than they re-read the first.
+ */
 export default function ContactForm() {
-  const [sent, setSent] = useState(false);
+  const empty = { name: "", phone: "", email: "", message: "" };
 
-  if (sent) {
-    return (
-      <div className="panel" style={{ marginBottom: 0 }}>
-        <p className="free-delivery free-delivery--met" style={{ marginTop: 0 }}>
-          <CheckIcon size={14} /> Thanks — message noted. For anything urgent,
-          please call us instead.
-        </p>
-        <button
-          type="button"
-          className="btn btn--ghost btn--sm"
-          onClick={() => setSent(false)}
-          style={{ marginTop: 16 }}
-        >
-          Send another
-        </button>
-      </div>
-    );
+  const [form, setForm] = useState(empty);
+  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const set = (key: keyof typeof form) => (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => setForm((f) => ({ ...f, [key]: e.target.value }));
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (busy) return;
+
+    setBusy(true);
+    setError(null);
+    setSent(false);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name.trim(),
+          phone: form.phone.trim(),
+          email: form.email.trim(),
+          message: form.message.trim(),
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error ?? "Could not send your message.");
+
+      setForm(empty);
+      setSent(true);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Could not send your message."
+      );
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
-    <form
-      className="panel"
-      style={{ marginBottom: 0 }}
-      onSubmit={(e) => {
-        e.preventDefault();
-        setSent(true);
-      }}
-    >
+    <form className="panel" style={{ marginBottom: 0 }} onSubmit={submit}>
       <div className="panel__head">
         <span className="panel__num">@</span>
         <h3>Send us a message</h3>
@@ -45,7 +66,15 @@ export default function ContactForm() {
           <label htmlFor="c-name">
             Name <span className="req">*</span>
           </label>
-          <input id="c-name" className="input" required placeholder="Your name" />
+          <input
+            id="c-name"
+            className="input"
+            required
+            placeholder="Your name"
+            autoComplete="name"
+            value={form.name}
+            onChange={set("name")}
+          />
         </div>
         <div className="form-field">
           <label htmlFor="c-phone">
@@ -57,11 +86,22 @@ export default function ContactForm() {
             inputMode="tel"
             required
             placeholder="03XX-XXXXXXX"
+            autoComplete="tel"
+            value={form.phone}
+            onChange={set("phone")}
           />
         </div>
         <div className="form-field form-field--full">
-          <label htmlFor="c-subject">Subject</label>
-          <input id="c-subject" className="input" placeholder="Order enquiry, feedback, catering…" />
+          <label htmlFor="c-email">Email (optional)</label>
+          <input
+            id="c-email"
+            className="input"
+            type="email"
+            placeholder="you@example.com"
+            autoComplete="email"
+            value={form.email}
+            onChange={set("email")}
+          />
         </div>
         <div className="form-field form-field--full">
           <label htmlFor="c-msg">
@@ -72,16 +112,31 @@ export default function ContactForm() {
             className="textarea"
             required
             placeholder="How can we help?"
+            value={form.message}
+            onChange={set("message")}
           />
         </div>
       </div>
 
-      <button type="submit" className="btn" style={{ marginTop: 18 }}>
-        Send message <ArrowRightIcon size={16} />
+      <button type="submit" className="btn" style={{ marginTop: 18 }} disabled={busy}>
+        {busy ? "Sending…" : "Send message"} <ArrowRightIcon size={16} />
       </button>
-      <p className="summary__note">
-        Demo form — messages are not delivered. Please call for anything urgent.
-      </p>
+
+      {sent && (
+        <p
+          className="free-delivery free-delivery--met"
+          role="status"
+          style={{ marginTop: 16 }}
+        >
+          <CheckIcon size={14} /> We received your message. We&apos;ll call you
+          soon.
+        </p>
+      )}
+      {error && (
+        <p className="auth-msg auth-msg--bad" role="alert" style={{ marginTop: 16 }}>
+          {error}
+        </p>
+      )}
     </form>
   );
 }
