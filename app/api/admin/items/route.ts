@@ -26,6 +26,47 @@ export function slugify(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
 }
 
+/**
+ * Normalises the two image slots into the [primary, hover] pair the storefront
+ * expects.
+ *
+ * The form holds images in fixed slots, so uploading only into the hover slot
+ * leaves a hole at index 0. A plain `.filter(Boolean)` would silently promote
+ * the hover shot to primary; this keeps slot order and, when only one image is
+ * supplied, uses it for both.
+ */
+export function normaliseImages(images?: unknown): string[] {
+  const raw = Array.isArray(images) ? images : [];
+  const primary = typeof raw[0] === "string" ? raw[0].trim() : "";
+  const hover = typeof raw[1] === "string" ? raw[1].trim() : "";
+
+  const first = primary || hover;
+  if (!first) return [];
+  return [first, hover || first];
+}
+
+/**
+ * A free id derived from the name, e.g. "Test Burger" -> "test-burger", then
+ * "test-burger-2" if that is taken.
+ *
+ * Adding an item that happens to share a name with an existing one is a normal
+ * thing to do (a seasonal re-run, a renamed variant), so it should not be an
+ * error the admin has to resolve by inventing an id by hand.
+ */
+async function uniqueId(
+  db: ReturnType<typeof insforgeAdmin>,
+  base: string
+): Promise<string> {
+  for (let n = 1; n <= 50; n++) {
+    const candidate = n === 1 ? base : `${base}-${n}`;
+    const { data } = await db.database
+      .from("menu_items").select("id").eq("id", candidate).maybeSingle();
+    if (!data) return candidate;
+  }
+  // Fifty collisions means something is wrong with the name, not the counter.
+  return `${base}-${Date.now()}`;
+}
+
 /** Shared shape check for create and update. Returns an error string or null. */
 export function validateItem(body: ItemInput, { partial = false } = {}): string | null {
   if (!partial || body.name !== undefined) {
@@ -77,11 +118,24 @@ export async function POST(request: Request) {
   if (problem) return Response.json({ error: problem }, { status: 400 });
 
   const db = insforgeAdmin();
-  const id = body.id?.trim() || slugify(body.name!);
 
-  const { data: clash } = await db.database
-    .from("menu_items").select("id").eq("id", id).maybeSingle();
-  if (clash) return Response.json({ error: `An item with id "${id}" already exists.` }, { status: 409 });
+  // An explicitly typed id must be respected exactly, so a collision there is a
+  // real mistake. A derived one just steps to the next free suffix.
+  const explicitId = body.id?.trim();
+  let id: string;
+  if (explicitId) {
+    const { data: clash } = await db.database
+      .from("menu_items").select("id").eq("id", explicitId).maybeSingle();
+    if (clash) {
+      return Response.json(
+        { error: `An item with id "${explicitId}" already exists.` },
+        { status: 409 }
+      );
+    }
+    id = explicitId;
+  } else {
+    id = await uniqueId(db, slugify(body.name!));
+  }
 
   // New items land at the end of the list.
   const { data: last } = await db.database
@@ -95,7 +149,7 @@ export async function POST(request: Request) {
     subcategory: body.subcategory!.trim(),
     variants: body.variants!.map((v) => ({ label: v.label.trim(), price: Number(v.price) })),
     description: body.description?.trim() ?? "",
-    images: Array.isArray(body.images) ? body.images.filter(Boolean) : [],
+    images: normaliseImages(body.images),
     spicy: !!body.spicy,
     featured: !!body.featured,
     is_new: !!body.is_new,
@@ -105,8 +159,12 @@ export async function POST(request: Request) {
   }]).select();
 
   if (error) {
-    console.error("[admin] item create failed:", error.message ?? JSON.stringify(error));
-    return Response.json({ error: "Could not create this item." }, { status: 503 });
+    const detail = error.message ?? JSON.stringify(error);
+    console.error("[admin] item create failed:", detail);
+    return Response.json(
+      { error: `Could not create this item: ${detail}` },
+      { status: 503 }
+    );
   }
   return Response.json({ ok: true, item: (data as unknown[])?.[0] }, { status: 201 });
 }

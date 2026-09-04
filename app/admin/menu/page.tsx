@@ -206,13 +206,41 @@ export default function AdminMenuPage() {
           <table>
             <thead>
               <tr>
-                <th>Name</th><th>Category</th><th>Price</th><th>Flags</th>
+                <th></th><th>Name</th><th>Category</th><th>Price</th><th>Flags</th>
                 <th>Available</th><th>Order</th><th></th>
               </tr>
             </thead>
             <tbody>
               {sorted.map((item, i) => (
                 <tr key={item.id}>
+                  <td style={{ width: 56 }}>
+                    {/* Plain <img>: these are admin thumbnails behind a login,
+                        so they are not worth an optimiser round trip. */}
+                    {item.images[0] ? (
+                      <img
+                        src={item.images[0]}
+                        alt=""
+                        width={44}
+                        height={44}
+                        style={{
+                          width: 44, height: 44, objectFit: "cover",
+                          borderRadius: 6, background: "#efe9df",
+                        }}
+                      />
+                    ) : (
+                      <span
+                        aria-label="No image"
+                        title="No image"
+                        style={{
+                          display: "grid", placeItems: "center",
+                          width: 44, height: 44, borderRadius: 6,
+                          background: "#efe9df", color: "#a2988b", fontSize: 16,
+                        }}
+                      >
+                        ×
+                      </span>
+                    )}
+                  </td>
                   <td>
                     <b>{item.name}</b>
                     <div style={{ color: "#6f6459", fontSize: 12 }}>{item.id}</div>

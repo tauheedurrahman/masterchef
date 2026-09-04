@@ -1,5 +1,5 @@
 import { insforgeAdmin } from "@/lib/insforge";
-import { validateItem, type ItemInput } from "../route";
+import { validateItem, type ItemInput, normaliseImages } from "../route";
 
 /** PATCH /api/admin/items/[id] — partial update (also used by the toggles). */
 export async function PATCH(
@@ -25,7 +25,7 @@ export async function PATCH(
   if (body.variants !== undefined)
     patch.variants = body.variants.map((v) => ({ label: v.label.trim(), price: Number(v.price) }));
   if (body.description !== undefined) patch.description = body.description.trim();
-  if (body.images !== undefined) patch.images = body.images.filter(Boolean);
+  if (body.images !== undefined) patch.images = normaliseImages(body.images);
   if (body.spicy !== undefined) patch.spicy = !!body.spicy;
   if (body.featured !== undefined) patch.featured = !!body.featured;
   if (body.is_new !== undefined) patch.is_new = !!body.is_new;

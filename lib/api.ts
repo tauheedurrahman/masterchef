@@ -28,14 +28,15 @@ if (typeof window !== "undefined") {
   );
 }
 
-export type SortKey = "featured" | "price-asc" | "price-desc" | "newest";
-
-export const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: "featured", label: "Featured" },
-  { value: "price-asc", label: "Price: low to high" },
-  { value: "price-desc", label: "Price: high to low" },
-  { value: "newest", label: "Newest" },
-];
+/**
+ * Re-exported from lib/sort so this module's public API is unchanged.
+ *
+ * The definitions moved out because <SortSelect> is a client component: it
+ * needs SORT_OPTIONS, and importing it from here pulled this server-only file
+ * into the browser bundle, where the guard above throws on module evaluation.
+ */
+export { SORT_OPTIONS, type SortKey } from "./sort";
+import { type SortKey } from "./sort";
 
 export interface ItemQuery {
   category?: CategorySlug | string;

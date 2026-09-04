@@ -2,7 +2,8 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronDownIcon } from "./Icons";
-import { SORT_OPTIONS } from "@/lib/api";
+// From lib/sort, not lib/api: lib/api is server-only and throws in the browser.
+import { SORT_OPTIONS } from "@/lib/sort";
 
 /**
  * Sort control. Writes to the URL (?sort=…) rather than local state so the

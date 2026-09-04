@@ -35,11 +35,28 @@ export async function POST(request: Request) {
       : "";
   const key = `menu/${safe || "upload"}-${Date.now()}.${ext}`;
 
-  const { data, error } = await insforgeAdmin().storage.from(BUCKET).upload(key, file);
-  if (error || !data) {
-    console.error("[admin] upload failed:", error?.message ?? JSON.stringify(error));
-    return Response.json({ error: "Upload failed." }, { status: 503 });
-  }
+  /**
+   * Everything from here on is wrapped.
+   *
+   * insforgeAdmin() throws outright when INSFORGE_API_KEY is missing, and the
+   * storage call can reject rather than return an error object (a dead bucket,
+   * a network fault). Either one used to escape as an unhandled 500, which the
+   * admin form could only report as a blank "Upload failed". The message is
+   * returned so a misconfigured deployment is diagnosable from the browser.
+   */
+  try {
+    const { data, error } = await insforgeAdmin().storage.from(BUCKET).upload(key, file);
 
-  return Response.json({ ok: true, url: data.url, key: data.key });
+    if (error || !data?.url) {
+      const detail = error?.message ?? "the storage bucket returned no URL";
+      console.error("[admin] upload failed:", detail);
+      return Response.json({ error: `Upload failed: ${detail}` }, { status: 503 });
+    }
+
+    return Response.json({ ok: true, url: data.url, key: data.key });
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    console.error("[admin] upload threw:", detail);
+    return Response.json({ error: `Upload failed: ${detail}` }, { status: 503 });
+  }
 }
