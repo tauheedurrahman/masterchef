@@ -12,7 +12,7 @@ interface Category {
 }
 
 /** Blank category form. The slug is only editable when creating. */
-const blankCategory = () => ({ id: "", display_name: "", icon: "" });
+const blankCategory = () => ({ id: "", display_name: "" });
 
 interface Variant { label: string; price: number }
 
@@ -56,7 +56,7 @@ export default function AdminMenuPage() {
   // list can never disagree.
   const [categories, setCategories] = useState<Category[]>([]);
   const [fallbackId, setFallbackId] = useState("uncategorized");
-  const [catForm, setCatForm] = useState<{ id: string; display_name: string; icon: string } | null>(null);
+  const [catForm, setCatForm] = useState<{ id: string; display_name: string } | null>(null);
   const [isNewCat, setIsNewCat] = useState(false);
   const [catError, setCatError] = useState<string | null>(null);
   const [catBusy, setCatBusy] = useState(false);
@@ -219,8 +219,8 @@ export default function AdminMenuPage() {
           // side, and sending it would only ever trip that check.
           body: JSON.stringify(
             isNewCat
-              ? { id: catForm.id, display_name: catForm.display_name, icon: catForm.icon }
-              : { display_name: catForm.display_name, icon: catForm.icon }
+              ? { id: catForm.id, display_name: catForm.display_name }
+              : { display_name: catForm.display_name }
           ),
         }
       );
@@ -327,11 +327,6 @@ export default function AdminMenuPage() {
               data-fallback={c.id === fallbackId}
             >
               <div className="adm__cat__top">
-                {c.icon && (
-                  <span className="adm__cat__icon" aria-hidden="true">
-                    {c.icon}
-                  </span>
-                )}
                 <div>
                   <div className="adm__cat__name">{c.display_name}</div>
                   <div className="adm__cat__slug">{c.id}</div>
@@ -347,11 +342,7 @@ export default function AdminMenuPage() {
                   type="button"
                   className="adm__btn adm__btn--ghost adm__btn--sm"
                   onClick={() => {
-                    setCatForm({
-                      id: c.id,
-                      display_name: c.display_name,
-                      icon: c.icon ?? "",
-                    });
+                    setCatForm({ id: c.id, display_name: c.display_name });
                     setIsNewCat(false);
                     setCatError(null);
                   }}
@@ -502,19 +493,6 @@ export default function AdminMenuPage() {
                 <p className="adm__hint">What customers see.</p>
               </div>
 
-              <div className="adm__field">
-                <label htmlFor="c-icon">Icon (optional)</label>
-                <input
-                  id="c-icon"
-                  type="text"
-                  value={catForm.icon}
-                  placeholder="🥤"
-                  maxLength={8}
-                  onChange={(e) => setCatForm({ ...catForm, icon: e.target.value })}
-                />
-                <p className="adm__hint">A single emoji.</p>
-              </div>
-
               {catError && <div className="adm__error">{catError}</div>}
 
               <div className="adm__row">
@@ -629,7 +607,7 @@ export default function AdminMenuPage() {
                     onChange={(e) => setEditing({ ...editing, category: e.target.value })}>
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.icon ? `${c.icon} ` : ""}{c.display_name}
+                        {c.display_name}
                       </option>
                     ))}
                   </select>

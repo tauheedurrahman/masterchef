@@ -276,9 +276,6 @@ export default async function HomePage() {
             </div>
             <div>
               <NewsletterForm />
-              <p className="newsletter__note">
-                Demo form — nothing is sent or stored.
-              </p>
             </div>
           </Reveal>
         </div>
