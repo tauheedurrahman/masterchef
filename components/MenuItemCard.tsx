@@ -50,33 +50,8 @@ export default function MenuItemCard({
         </Link>
 
         {soldOut && (
-          <span
-            style={{
-              position: "absolute",
-              inset: 0,
-              zIndex: 3,
-              display: "grid",
-              placeItems: "center",
-              borderRadius: "inherit",
-              background: "rgba(18,16,15,.58)",
-              pointerEvents: "none",
-            }}
-          >
-            <span
-              style={{
-                background: "#12100f",
-                color: "#f6efe3",
-                border: "1px solid #e8a33d",
-                borderRadius: 999,
-                padding: "6px 16px",
-                fontSize: 12,
-                fontWeight: 700,
-                letterSpacing: ".14em",
-                textTransform: "uppercase",
-              }}
-            >
-              Sold Out
-            </span>
+          <span className="card__veil" aria-hidden="true">
+            <span className="card__ribbon">Sold Out</span>
           </span>
         )}
 
@@ -97,19 +72,8 @@ export default function MenuItemCard({
           </span>
         </div>
 
-        {soldOut ? (
-          <button
-            type="button"
-            className="card__quick"
-            disabled
-            aria-label={`${item.name} is sold out`}
-            style={{ opacity: 0.55, cursor: "not-allowed", zIndex: 4 }}
-          >
-            Sold out
-          </button>
-        ) : (
-          <QuickAddButton item={item} />
-        )}
+        {/* No quick-add on a sold-out card — there is nothing to add. */}
+        {!soldOut && <QuickAddButton item={item} />}
       </div>
 
       <div className="card__body">

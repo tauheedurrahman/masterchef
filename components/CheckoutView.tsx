@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import SafeImage from "./SafeImage";
-import { ArrowRightIcon, CheckIcon, PhoneIcon } from "./Icons";
+import { ArrowRightIcon, CheckIcon, ChevronDownIcon, PhoneIcon } from "./Icons";
 import { deliveryFeeFor, FREE_DELIVERY_THRESHOLD, useCart } from "@/lib/store";
+import { useAuth } from "@/lib/auth-context";
 import { money } from "@/lib/format";
 import { SITE } from "@/lib/site";
 
@@ -16,12 +17,31 @@ interface Placed {
   type: OrderType;
   total: number;
   payment: Payment;
+  pointsEarned: number;
+}
+
+interface SavedAddress {
+  id: string;
+  label: string;
+  street: string;
+  area: string | null;
+  city: string | null;
+  landmark: string | null;
+  is_default: boolean;
+}
+
+/** A promo code the server has confirmed, with the discount it is worth. */
+interface AppliedOffer {
+  code: string;
+  discount: number;
+  label: string;
 }
 
 const PHONE_RE = /^03\d{2}-?\d{7}$/;
 
 export default function CheckoutView() {
   const { lines, hydrated, subtotal, clear, notify } = useCart();
+  const { customer, isAuthenticated, loading: authLoading, refresh } = useAuth();
 
   const [orderType, setOrderType] = useState<OrderType>("delivery");
   const [payment, setPayment] = useState<Payment>("cod");
@@ -34,7 +54,7 @@ export default function CheckoutView() {
     email: "",
     address: "",
     area: "",
-    city: SITE.city,
+    city: SITE.city as string,
     landmark: "",
     timeNote: "",
     cardNumber: "",
@@ -43,18 +63,170 @@ export default function CheckoutView() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  /* ------------------------- signed-in extras ------------------------- */
+
+  const [addresses, setAddresses] = useState<SavedAddress[]>([]);
+  const [addressId, setAddressId] = useState<string>("");
+  const [saveAddress, setSaveAddress] = useState(false);
+
+  const [promo, setPromo] = useState("");
+  const [applied, setApplied] = useState<AppliedOffer | null>(null);
+  const [promoBusy, setPromoBusy] = useState(false);
+  const [promoError, setPromoError] = useState<string | null>(null);
+
+  // Contact details are pre-filled once, when the profile first arrives. After
+  // that the form belongs to the customer — re-filling on every render would
+  // undo their edits as they type.
+  const prefilled = useRef(false);
+  useEffect(() => {
+    if (prefilled.current || !customer) return;
+    prefilled.current = true;
+    setForm((f) => ({
+      ...f,
+      name: f.name || customer.fullName,
+      phone: f.phone || customer.phone,
+      email: f.email || customer.email || "",
+    }));
+  }, [customer]);
+
+  // Saved addresses, with the default pre-selected and filled in.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/addresses", { cache: "no-store" });
+        if (!res.ok || cancelled) return;
+        const { addresses: list } = (await res.json()) as { addresses: SavedAddress[] };
+        if (cancelled || !list?.length) return;
+
+        setAddresses(list);
+        const preset = list.find((a) => a.is_default) ?? list[0];
+        setAddressId(preset.id);
+        setForm((f) => ({
+          ...f,
+          address: f.address || preset.street,
+          area: f.area || preset.area || "",
+          city: preset.city || f.city,
+          landmark: f.landmark || preset.landmark || "",
+        }));
+      } catch {
+        /* typing the address by hand still works */
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated]);
+
   const set = (key: keyof typeof form) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
+  function pickAddress(id: string) {
+    setAddressId(id);
+    if (!id) return; // "Type a new address"
+    const a = addresses.find((x) => x.id === id);
+    if (!a) return;
+    setForm((f) => ({
+      ...f,
+      address: a.street,
+      area: a.area || "",
+      city: a.city || SITE.city,
+      landmark: a.landmark || "",
+    }));
+  }
+
   // Pickup zeroes the delivery fee — same rule the cart page uses.
   const deliveryFee = deliveryFeeFor(subtotal, orderType === "pickup");
-  const total = subtotal + deliveryFee;
+  // The discount shown here is the server's own answer for this subtotal, and
+  // /api/orders recomputes it again before charging anything.
+  const discount = applied ? Math.min(applied.discount, subtotal) : 0;
+  const total = Math.max(0, subtotal + deliveryFee - discount);
 
-  const count = useMemo(
-    () => lines.reduce((n, l) => n + l.qty, 0),
-    [lines]
-  );
+  const count = useMemo(() => lines.reduce((n, l) => n + l.qty, 0), [lines]);
+
+  // A code that was valid for a bigger basket may no longer meet its minimum,
+  // so re-check it whenever the subtotal moves.
+  const appliedCode = applied?.code;
+  useEffect(() => {
+    if (!appliedCode) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/validate-offer", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code: appliedCode, subtotal }),
+        });
+        const json = await res.json().catch(() => ({}));
+        if (cancelled) return;
+
+        if (!res.ok || !json.valid) {
+          setApplied(null);
+          setPromoError(json.error ?? "That code no longer applies to this order.");
+          return;
+        }
+        setApplied({
+          code: json.code,
+          discount: json.discount,
+          label:
+            json.discountType === "percentage"
+              ? `${json.discountValue}% off`
+              : `${money(json.discountValue)} off`,
+        });
+      } catch {
+        /* keep the last known state; the server decides at checkout anyway */
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [appliedCode, subtotal]);
+
+  async function applyPromo() {
+    const code = promo.trim().toUpperCase();
+    if (!code || promoBusy) return;
+
+    setPromoBusy(true);
+    setPromoError(null);
+    try {
+      const res = await fetch("/api/auth/validate-offer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, subtotal }),
+      });
+      const json = await res.json().catch(() => ({}));
+
+      if (res.status === 401) {
+        setPromoError("Sign in to use a promo code.");
+        return;
+      }
+      if (!res.ok || !json.valid) {
+        setApplied(null);
+        setPromoError(json.error ?? "That code is not valid.");
+        return;
+      }
+
+      setApplied({
+        code: json.code,
+        discount: json.discount,
+        label:
+          json.discountType === "percentage"
+            ? `${json.discountValue}% off`
+            : `${money(json.discountValue)} off`,
+      });
+      setPromo("");
+    } catch {
+      setPromoError("Could not check that code. Please try again.");
+    } finally {
+      setPromoBusy(false);
+    }
+  }
 
   function validate(): boolean {
     const next: Record<string, string> = {};
@@ -118,14 +290,46 @@ export default function CheckoutView() {
           })),
           paymentMethod: payment,
           specialInstructions: form.timeNote.trim(),
+          // The code, not the discount: the server prices the offer itself.
+          offerCode: applied?.code ?? null,
         }),
       });
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const { orderNumber } = (await res.json()) as { orderNumber: string };
+      const json = (await res.json().catch(() => ({}))) as {
+        orderNumber?: string;
+        total?: number;
+        discount?: number;
+        pointsEarned?: number;
+        error?: string;
+      };
+      if (!res.ok || !json.orderNumber) throw new Error(json.error ?? `HTTP ${res.status}`);
 
-      setPlaced({ number: orderNumber, type: orderType, total, payment });
+      // Saving the address is a nicety; a failure here must not look like a
+      // failed order, so it is deliberately not awaited into the error path.
+      if (saveAddress && isAuthenticated && orderType === "delivery") {
+        fetch("/api/auth/addresses", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            label: "Home",
+            street: form.address.trim(),
+            area: form.area.trim(),
+            city: form.city.trim(),
+            landmark: form.landmark.trim(),
+          }),
+        }).catch(() => {});
+      }
+
+      setPlaced({
+        number: json.orderNumber,
+        type: orderType,
+        total: json.total ?? total,
+        payment,
+        pointsEarned: json.pointsEarned ?? 0,
+      });
       clear();
+      // Loyalty totals just moved — pull the fresh profile for the navbar.
+      if (isAuthenticated) refresh();
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch {
       // Cart is deliberately left intact so the customer can retry.
@@ -169,18 +373,31 @@ export default function CheckoutView() {
             </div>
           </div>
 
+          {isAuthenticated && placed.pointsEarned > 0 && (
+            <p className="summary__note" style={{ marginTop: 18 }}>
+              You earned <b>{placed.pointsEarned}</b> loyalty point
+              {placed.pointsEarned === 1 ? "" : "s"} on this order.
+            </p>
+          )}
+
           <div className="confirm__actions">
-            <a href={`tel:${SITE.phoneTel[0]}`} className="btn">
-              <PhoneIcon size={17} /> Call us
-            </a>
+            {isAuthenticated ? (
+              <Link href="/profile/orders" className="btn">
+                Track this order
+              </Link>
+            ) : (
+              <a href={`tel:${SITE.phoneTel[0]}`} className="btn">
+                <PhoneIcon size={17} /> Call us
+              </a>
+            )}
             <Link href="/menu" className="btn btn--ghost">
               Order something else
             </Link>
           </div>
 
           <p className="summary__note" style={{ marginTop: 30 }}>
-            This is a demo storefront — no payment was taken and no order was
-            sent to the kitchen.
+            Card payments are not processed online — pay cash on{" "}
+            {placed.type === "delivery" ? "delivery" : "pickup"}.
           </p>
         </div>
       </div>
@@ -213,6 +430,15 @@ export default function CheckoutView() {
   /* ------------------------------- Form ------------------------------- */
   return (
     <div className="container">
+      {!authLoading && !isAuthenticated && (
+        <div className="nudge" style={{ marginBottom: 22 }}>
+          <p>Sign in to track orders &amp; earn rewards.</p>
+          <Link href="/login?redirect=%2Fcheckout" className="btn btn--sm">
+            Sign in
+          </Link>
+        </div>
+      )}
+
       <form className="checkout-layout" onSubmit={placeOrder} noValidate>
         <div>
           {/* 1. Order type */}
@@ -314,6 +540,31 @@ export default function CheckoutView() {
                 <h3>Delivery details</h3>
               </div>
 
+              {addresses.length > 0 && (
+                <div className="saved-addr form-field">
+                  <label htmlFor="saved-address">Deliver to</label>
+                  <span className="select">
+                    <select
+                      id="saved-address"
+                      value={addressId}
+                      onChange={(e) => pickAddress(e.target.value)}
+                    >
+                      {addresses.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.label} — {[a.street, a.area].filter(Boolean).join(", ")}
+                          {a.is_default ? " (default)" : ""}
+                        </option>
+                      ))}
+                      <option value="">Type a new address…</option>
+                    </select>
+                    <ChevronDownIcon size={16} />
+                  </span>
+                  <span className="hint">
+                    You can still edit any of the fields below before ordering.
+                  </span>
+                </div>
+              )}
+
               <div className="form-grid">
                 <div className="form-field form-field--full">
                   <label htmlFor="address">
@@ -385,6 +636,17 @@ export default function CheckoutView() {
                   />
                 </div>
               </div>
+
+              {isAuthenticated && (
+                <label className="check-row" style={{ marginTop: 16 }}>
+                  <input
+                    type="checkbox"
+                    checked={saveAddress}
+                    onChange={(e) => setSaveAddress(e.target.checked)}
+                  />
+                  Save this address to my account
+                </label>
+              )}
             </section>
           )}
 
@@ -504,12 +766,56 @@ export default function CheckoutView() {
 
           <hr className="hairline" />
 
+          {isAuthenticated && (
+            <div style={{ marginBottom: 16 }}>
+              <div className="promo">
+                <input
+                  className="input"
+                  value={promo}
+                  onChange={(e) => setPromo(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      applyPromo();
+                    }
+                  }}
+                  placeholder="Enter promo code"
+                  aria-label="Promo code"
+                  autoComplete="off"
+                />
+                <button
+                  type="button"
+                  className="btn btn--sm"
+                  onClick={applyPromo}
+                  disabled={promoBusy || !promo.trim()}
+                >
+                  {promoBusy ? "…" : "Apply"}
+                </button>
+              </div>
+
+              {applied && (
+                <span className="promo-msg promo-msg--ok">
+                  ✓ {applied.code} applied — {applied.label}!
+                </span>
+              )}
+              {promoError && !applied && (
+                <span className="promo-msg promo-msg--bad">✗ {promoError}</span>
+              )}
+            </div>
+          )}
+
           <div className="summary__row">
             <span>
               Subtotal ({count} {count === 1 ? "item" : "items"})
             </span>
             <b className="price">{money(subtotal)}</b>
           </div>
+          {discount > 0 && (
+            <div className="summary__row summary__row--discount">
+              <span>Discount ({applied?.code})</span>
+              <b className="price">−{money(discount)}</b>
+            </div>
+          )}
           <div className="summary__row">
             <span>{orderType === "pickup" ? "Pickup" : "Delivery fee"}</span>
             <b className="price">
@@ -521,13 +827,18 @@ export default function CheckoutView() {
             <b className="price">{money(total)}</b>
           </div>
 
-          <button type="submit" className="btn btn--block" style={{ marginTop: 20 }}>
-            Place order · {money(total)}
+          <button
+            type="submit"
+            className="btn btn--block"
+            style={{ marginTop: 20 }}
+            disabled={submitting}
+          >
+            {submitting ? "Placing order…" : `Place order · ${money(total)}`}
           </button>
 
           <p className="summary__note">
             By placing this order you agree to be called on the number above.
-            Demo storefront — nothing is charged.
+            Payment is taken in cash when your food arrives.
           </p>
         </aside>
       </form>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Hero from "@/components/Hero";
+import CartNudge from "@/components/CartNudge";
 import CategoryStrip from "@/components/CategoryStrip";
 import MenuItemCard from "@/components/MenuItemCard";
 import DealCard from "@/components/DealCard";
@@ -61,6 +62,9 @@ export default async function HomePage() {
   return (
     <>
       <Hero />
+
+      {/* Only renders for a signed-in customer with a stale saved cart. */}
+      <CartNudge />
 
       {/* ------------------------- Category strip ------------------------ */}
       <section className="section section--tight" id="categories">

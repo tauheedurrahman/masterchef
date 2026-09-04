@@ -10,11 +10,12 @@ import {
   CartIcon,
   CloseIcon,
   SearchIcon,
-  UserIcon,
 } from "./Icons";
 import { useCart } from "@/lib/store";
+import { useAuth } from "@/lib/auth-context";
 import { money } from "@/lib/format";
 import { ANNOUNCEMENTS, SITE } from "@/lib/site";
+import AccountMenu, { ACCOUNT_LINKS } from "./AccountMenu";
 
 /** Trimmed item shape the layout hands down for instant search suggestions. */
 export interface SearchIndexItem {
@@ -35,7 +36,8 @@ const LINKS = [
 export default function Navbar({ index }: { index: SearchIndexItem[] }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { count, hydrated } = useCart();
+  const { count, hydrated, notify } = useCart();
+  const { isAuthenticated, customer, loading: authLoading, signOut } = useAuth();
 
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -179,13 +181,7 @@ export default function Navbar({ index }: { index: SearchIndexItem[] }) {
               )}
             </Link>
 
-            <Link
-              href="/login"
-              className="icon-btn"
-              aria-label="Sign in or create an account"
-            >
-              <UserIcon />
-            </Link>
+            <AccountMenu />
 
             <button
               type="button"
@@ -288,6 +284,12 @@ export default function Navbar({ index }: { index: SearchIndexItem[] }) {
               </button>
             </div>
 
+            {isAuthenticated && customer && (
+              <p className="drawer__hello">
+                Hello, <b>{customer.fullName.split(" ")[0]}</b>!
+              </p>
+            )}
+
             {LINKS.map((l) => (
               <Link key={l.href} href={l.href} className="drawer__link">
                 {l.label}
@@ -298,10 +300,19 @@ export default function Navbar({ index }: { index: SearchIndexItem[] }) {
               Cart {hydrated && count > 0 ? `(${count})` : ""}
               <ArrowRightIcon size={16} />
             </Link>
-            <Link href="/login" className="drawer__link">
-              Sign in
-              <ArrowRightIcon size={16} />
-            </Link>
+            {authLoading ? null : isAuthenticated ? (
+              ACCOUNT_LINKS.map((l) => (
+                <Link key={l.href} href={l.href} className="drawer__link">
+                  {l.label}
+                  <ArrowRightIcon size={16} />
+                </Link>
+              ))
+            ) : (
+              <Link href="/login" className="drawer__link">
+                Sign in
+                <ArrowRightIcon size={16} />
+              </Link>
+            )}
 
             <div className="drawer__foot">
               <span className="eyebrow">Call to order</span>
@@ -313,6 +324,21 @@ export default function Navbar({ index }: { index: SearchIndexItem[] }) {
               <Link href="/menu" className="btn btn--block" style={{ marginTop: 12 }}>
                 Order now
               </Link>
+              {isAuthenticated && (
+                <button
+                  type="button"
+                  className="drawer__signout"
+                  onClick={async () => {
+                    setDrawerOpen(false);
+                    await signOut();
+                    notify("Signed out.");
+                    router.push("/");
+                    router.refresh();
+                  }}
+                >
+                  Sign Out
+                </button>
+              )}
             </div>
           </aside>
         </>

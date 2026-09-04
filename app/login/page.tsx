@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import AuthTabs from "@/components/AuthTabs";
 import SafeImage from "@/components/SafeImage";
 import { unsplash } from "@/lib/data";
@@ -31,7 +32,11 @@ export default function LoginPage() {
       </div>
 
       <div className="auth__form-wrap">
-        <AuthTabs />
+        {/* AuthTabs reads ?redirect= via useSearchParams, which needs a
+            boundary for this page to stay prerenderable. */}
+        <Suspense fallback={<div className="auth__card" />}>
+          <AuthTabs />
+        </Suspense>
       </div>
     </div>
   );

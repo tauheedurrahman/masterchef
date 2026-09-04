@@ -43,6 +43,7 @@ export default function ItemPurchasePanel({ item }: { item: MenuItemRow }) {
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         <span className="badge badge--outline">{item.subcategory}</span>
+        {soldOut && <span className="badge">Sold Out</span>}
         {item.isNew && <span className="badge badge--gold">New</span>}
         {item.trending && <span className="badge">Trending</span>}
         {item.spicy && (
@@ -76,20 +77,9 @@ export default function ItemPurchasePanel({ item }: { item: MenuItemRow }) {
       <p className="detail__desc">{item.description}</p>
 
       {soldOut && (
-        <p
-          role="status"
-          style={{
-            background: "#12100f",
-            color: "#f6efe3",
-            border: "1px solid #e8a33d",
-            borderRadius: 10,
-            padding: "11px 15px",
-            margin: "0 0 18px",
-            fontSize: 14,
-          }}
-        >
-          <b style={{ letterSpacing: ".1em", textTransform: "uppercase" }}>Sold out</b>
-          {" — "}this one is off the menu for now. Check back later or pick something else.
+        <p className="sold-note" role="status">
+          <b>Sold out</b> — this one is off the menu for now. Check back later or
+          pick something else.
         </p>
       )}
 
@@ -97,10 +87,7 @@ export default function ItemPurchasePanel({ item }: { item: MenuItemRow }) {
         <span className="field-label">
           Choose size <span style={{ color: "var(--accent)" }}>*</span>
         </span>
-        <div
-          style={soldOut ? { opacity: 0.5, pointerEvents: "none" } : undefined}
-          aria-disabled={soldOut}
-        >
+        <div className={soldOut ? "is-disabled" : undefined} aria-disabled={soldOut}>
           <VariantSelector
             variants={item.variants}
             selected={variantLabel}
@@ -149,7 +136,7 @@ export default function ItemPurchasePanel({ item }: { item: MenuItemRow }) {
         >
           <CartIcon size={18} />
           {soldOut
-            ? "Sold out"
+            ? "Currently Unavailable"
             : variant
               ? `Add to cart · ${money(lineTotal)}`
               : "Choose a size first"}

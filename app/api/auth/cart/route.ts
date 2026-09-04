@@ -17,6 +17,7 @@ interface SavedLine {
   unitPrice: number;
   qty: number;
   image: string;
+  notes?: string;
 }
 
 const MAX_LINES = 60;
@@ -35,6 +36,7 @@ function sanitise(raw: unknown): SavedLine[] {
       unitPrice: Number(l.unitPrice) || 0,
       qty: Math.min(99, Math.max(1, Math.floor(Number(l.qty) || 1))),
       image: String(l.image ?? "").slice(0, 500),
+      notes: l.notes ? String(l.notes).slice(0, 240) : undefined,
     }))
     .filter((l) => l.id && l.key);
 }

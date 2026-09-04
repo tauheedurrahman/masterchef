@@ -20,11 +20,17 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
 
+import { useAuth } from "./auth-context";
+
 const STORAGE_KEY = "masterchef.cart.v1";
+
+/** How long to wait after the last change before backing the cart up. */
+const SYNC_DEBOUNCE_MS = 500;
 
 /** Free delivery at or above this subtotal. */
 export const FREE_DELIVERY_THRESHOLD = 1500;
@@ -84,6 +90,36 @@ export function deliveryFeeFor(subtotal: number, pickup = false): number {
   return subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
 }
 
+/**
+ * Merges the cart saved in the database into the one in this browser.
+ *
+ * Same line (same item + variant) in both: the higher quantity wins rather than
+ * the sum. Someone who added two burgers on their phone and two on their laptop
+ * meant to order two, not four.
+ */
+function mergeCarts(
+  local: CartLine[],
+  remote: CartLine[]
+): { lines: CartLine[]; recovered: number } {
+  const merged = new Map(local.map((l) => [l.key, l]));
+  let recovered = 0;
+
+  for (const line of remote) {
+    const mine = merged.get(line.key);
+    if (!mine) {
+      merged.set(line.key, line);
+      recovered += line.qty;
+      continue;
+    }
+    if (line.qty > mine.qty) {
+      merged.set(line.key, { ...mine, qty: line.qty });
+      recovered += line.qty - mine.qty;
+    }
+  }
+
+  return { lines: [...merged.values()], recovered };
+}
+
 function readStorage(): CartLine[] {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -124,6 +160,85 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [lines, hydrated]);
 
+  const notifyRef = useRef<(message: string) => void>(() => {});
+
+  /* ------------------------------------------------------------------ *
+   * Cart sync — localStorage stays primary, the database is a backup
+   * ------------------------------------------------------------------ */
+
+  const { customer } = useAuth();
+  const customerId = customer?.id ?? null;
+
+  // The customer whose saved cart has already been merged in. Reset on sign
+  // out so signing back in merges again.
+  const mergedFor = useRef<string | null>(null);
+  const [mergeDone, setMergeDone] = useState(false);
+
+  useEffect(() => {
+    if (!hydrated) return;
+
+    if (!customerId) {
+      // Signed out: the localStorage cart is kept exactly as it is.
+      mergedFor.current = null;
+      setMergeDone(false);
+      return;
+    }
+    if (mergedFor.current === customerId) return;
+    mergedFor.current = customerId;
+
+    let cancelled = false;
+
+    (async () => {
+      let remote: CartLine[] = [];
+      try {
+        const res = await fetch("/api/auth/cart", { cache: "no-store" });
+        if (res.ok) remote = ((await res.json()) as { items: CartLine[] }).items ?? [];
+      } catch {
+        // Offline or a failed backup read — the local cart is untouched and
+        // still correct, so this is not worth surfacing.
+      }
+      if (cancelled) return;
+
+      if (remote.length > 0) {
+        setLines((prev) => {
+          const { lines: merged, recovered } = mergeCarts(prev, remote);
+          if (recovered > 0) {
+            notifyRef.current(
+              `Cart restored — ${recovered} item${recovered === 1 ? "" : "s"}`
+            );
+          }
+          return merged;
+        });
+      }
+
+      // Marking the merge done releases the backup effect below, which then
+      // pushes the merged cart (or a local-only cart) up to the database.
+      if (!cancelled) setMergeDone(true);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hydrated, customerId]);
+
+  // Debounced, fire-and-forget backup. Never awaited by the UI: a failed save
+  // just means the browser copy is the only one, which is the normal case for
+  // guests anyway.
+  useEffect(() => {
+    if (!hydrated || !customerId || !mergeDone) return;
+
+    const timer = window.setTimeout(() => {
+      fetch("/api/auth/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: lines }),
+        keepalive: true,
+      }).catch(() => {});
+    }, SYNC_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [lines, hydrated, customerId, mergeDone]);
+
   const notify = useCallback((message: string) => {
     const id = Date.now() + Math.random();
     setToasts((t) => [...t, { id, message }]);
@@ -131,6 +246,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setToasts((t) => t.filter((x) => x.id !== id));
     }, 3200);
   }, []);
+
+  // The sync effect above runs before `notify` is defined, so it raises toasts
+  // through this ref instead of capturing the callback.
+  notifyRef.current = notify;
 
   const dismissToast = useCallback((id: number) => {
     setToasts((t) => t.filter((x) => x.id !== id));

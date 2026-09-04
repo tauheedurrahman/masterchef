@@ -1,5 +1,7 @@
 import { after } from "next/server";
 import { insforgeAdmin } from "@/lib/insforge";
+import { checkOffer } from "@/lib/offers";
+import { getAuthedCustomer } from "@/app/api/auth/_lib/session";
 
 /**
  * Delivery pricing, mirrored from lib/store.tsx.
@@ -13,11 +15,19 @@ import { insforgeAdmin } from "@/lib/insforge";
 const FREE_DELIVERY_THRESHOLD = 1500;
 const DELIVERY_FEE = 100;
 
+/** One loyalty point per this many rupees spent. */
+const RUPEES_PER_POINT = 100;
+
 /**
  * POST /api/orders
  *
  * Takes the checkout form + cart, prices it against the DATABASE (never the
- * browser's numbers), stores the order, and forwards it to the n8n webhook.
+ * browser's numbers), applies any promo code server-side, stores the order, and
+ * forwards it to the n8n webhook.
+ *
+ * Guests and signed-in customers both come through here. A session, if there is
+ * one, is read from the auth cookies rather than from the body — a customer_id
+ * in the request could be anyone's.
  *
  * The webhook runs after the response is flushed, so a slow or dead n8n never
  * makes a customer wait — and never fails their order.
@@ -45,6 +55,7 @@ interface IncomingOrder {
   items: IncomingItem[];
   paymentMethod: string;
   specialInstructions: string;
+  offerCode?: string | null;
 }
 
 /** `MC-YYMMDD-XXXX`, e.g. MC-260901-4821. */
@@ -167,6 +178,12 @@ export async function POST(request: Request) {
     return Response.json({ error: errors.join(" "), errors }, { status: 400 });
   }
 
+  /* --------------------------- who is ordering ------------------------ */
+  // Resolved from cookies, never from the request body. A guest simply comes
+  // back as null and the order is stored without a customer_id.
+  const auth = await getAuthedCustomer();
+  const customerId = auth?.customer.id ?? null;
+
   /* ------------------------ price from the DB ------------------------- */
   let priced: PricedItem[];
   let rejected: string[];
@@ -187,35 +204,79 @@ export async function POST(request: Request) {
   const pickup = orderType === "pickup";
   const subtotal = priced.reduce((sum, i) => sum + i.lineTotal, 0);
   const deliveryFee = pickup ? 0 : subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
-  const total = subtotal + deliveryFee;
+
+  /* ----------------------------- the offer ---------------------------- */
+  // Re-checked here against the subtotal the server just computed. Whatever
+  // the browser was shown is irrelevant — this is what the customer pays.
+  const requestedCode = (body.offerCode ?? "").trim();
+  let discount = 0;
+  let offerCode: string | null = null;
+  let offerId: string | null = null;
+  let offerUsedCount = 0;
+
+  if (requestedCode) {
+    const check = await checkOffer(requestedCode, subtotal, customerId);
+    if (!check.ok) {
+      // Refuse rather than silently dropping the discount: the customer is
+      // looking at a total that included it.
+      return Response.json({ error: check.error, code: "OFFER" }, { status: 400 });
+    }
+    discount = check.discount ?? 0;
+    offerCode = check.offer!.code;
+    offerId = check.offer!.id;
+    offerUsedCount = check.offer!.used_count ?? 0;
+  }
+
+  const total = Math.max(0, subtotal + deliveryFee - discount);
+  const pointsEarned = customerId ? Math.floor(total / RUPEES_PER_POINT) : 0;
   const estimatedMinutes = pickup ? 20 : 40;
 
   const now = new Date();
   const orderNumber = orderNumberFor(now);
 
+  const deliveryAddress = pickup
+    ? null
+    : {
+        street: addr?.street?.trim() ?? "",
+        area: addr?.area?.trim() ?? "",
+        city: addr?.city?.trim() || "Peshawar",
+        landmark: addr?.landmark?.trim() || "",
+      };
+
   /* ------------------------------ store ------------------------------- */
-  const { error: insertError } = await insforgeAdmin()
-    .database.from("orders")
+  const db = insforgeAdmin();
+
+  const { data: inserted, error: insertError } = await db.database
+    .from("orders")
     .insert([
       {
         order_number: orderNumber,
+        customer_id: customerId,
         status: "new",
         order_type: orderType,
         customer_name: name,
         phone,
         email: email || null,
-        address: pickup ? null : addr?.street?.trim() ?? null,
-        area: pickup ? null : addr?.area?.trim() ?? null,
-        city: pickup ? null : addr?.city?.trim() || "Peshawar",
-        landmark: pickup ? null : addr?.landmark?.trim() || null,
+        // Both shapes are written on purpose: delivery_address is what the
+        // customer's order history reads, the flat columns are what the admin
+        // dashboard still renders.
+        delivery_address: deliveryAddress,
+        address: deliveryAddress?.street ?? null,
+        area: deliveryAddress?.area ?? null,
+        city: deliveryAddress?.city ?? null,
+        landmark: deliveryAddress?.landmark || null,
         notes: body.specialInstructions?.trim() || null,
         items: priced,
         subtotal,
         delivery_fee: deliveryFee,
+        discount,
         total,
+        offer_code: offerCode,
+        loyalty_points_earned: pointsEarned,
         payment_method: body.paymentMethod === "card" ? "card" : "cod",
       },
-    ]);
+    ])
+    .select();
 
   if (insertError) {
     console.error("[orders] insert failed:", insertError.message ?? JSON.stringify(insertError));
@@ -225,6 +286,65 @@ export async function POST(request: Request) {
     );
   }
 
+  const orderId = ((inserted as { id?: string }[] | null) ?? [])[0]?.id ?? null;
+
+  /* --------------------- loyalty, redemption, cart -------------------- */
+  // All of this is bookkeeping around an order that is already saved. It runs
+  // with the admin key (RLS keeps customers out of their own loyalty columns),
+  // and a failure is logged rather than returned: the food is ordered either
+  // way, and failing the request here would invite a duplicate order.
+  if (customerId && auth) {
+    const c = auth.customer;
+    const { error: pointsError } = await db.database
+      .from("customers")
+      .update({
+        loyalty_points: c.loyaltyPoints + pointsEarned,
+        total_orders: c.totalOrders + 1,
+        total_spent: c.totalSpent + total,
+        updated_at: now.toISOString(),
+      })
+      .eq("id", customerId);
+
+    if (pointsError) {
+      console.error(
+        `[orders] loyalty update failed for ${orderNumber}:`,
+        pointsError.message ?? pointsError
+      );
+    }
+
+    if (offerId) {
+      const { error: usedError } = await db.database
+        .from("used_offers")
+        .insert([{ customer_id: customerId, offer_id: offerId, order_id: orderId }]);
+      if (usedError) {
+        console.error(
+          `[orders] used_offers insert failed for ${orderNumber}:`,
+          usedError.message ?? usedError
+        );
+      }
+    }
+
+    // The saved cart has been checked out, so the backup is emptied too —
+    // otherwise the next sign-in would "restore" an order already placed.
+    await db.database
+      .from("saved_carts")
+      .update({ items: [], updated_at: now.toISOString() })
+      .eq("customer_id", customerId);
+  }
+
+  if (offerId) {
+    const { error: countError } = await db.database
+      .from("offers")
+      .update({ used_count: offerUsedCount + 1 })
+      .eq("id", offerId);
+    if (countError) {
+      console.error(
+        `[orders] offer count update failed for ${orderNumber}:`,
+        countError.message ?? countError
+      );
+    }
+  }
+
   /* ----------------------------- webhook ------------------------------ */
   const webhookUrl = process.env.NEXT_PUBLIC_WEBHOOK_URL;
   const payload = {
@@ -232,17 +352,13 @@ export async function POST(request: Request) {
     timestamp: now.toISOString(),
     orderType,
     customer: { name, phone, email },
-    deliveryAddress: pickup
-      ? null
-      : {
-          street: addr?.street?.trim() ?? "",
-          area: addr?.area?.trim() ?? "",
-          city: addr?.city?.trim() || "Peshawar",
-          landmark: addr?.landmark?.trim() ?? "",
-        },
+    registered: !!customerId,
+    deliveryAddress,
     items: priced,
     subtotal,
     deliveryFee,
+    discount,
+    offerCode,
     total,
     paymentMethod: body.paymentMethod === "card" ? "card" : "cod",
     specialInstructions: body.specialInstructions?.trim() ?? "",
@@ -277,5 +393,13 @@ export async function POST(request: Request) {
     });
   }
 
-  return Response.json({ orderNumber, estimatedMinutes });
+  return Response.json({
+    orderNumber,
+    estimatedMinutes,
+    subtotal,
+    deliveryFee,
+    discount,
+    total,
+    pointsEarned,
+  });
 }
