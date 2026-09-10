@@ -136,7 +136,7 @@ WhatsApp
 
 Floating one-tap order button pre-filled with a greeting
 
-👤 Customer Accounts
+Customer Accounts
 
 Phone-number sign-in — 03XX-XXXXXXX is the identifier; no email required
 
