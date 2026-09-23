@@ -12,7 +12,7 @@ View the Live Site → https://masterchef.insforge.site/
 
 
 📍 Gulbahar No. 3, Near Jan Bakers, Ishrat Cinema Road, Peshawar
-📞 032093389590 · 03139792167
+📞 032093389590 ·
 
  Table of Contents
 
